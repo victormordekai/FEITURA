@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FEITURA® | Estruturar uma cotação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css"><link rel="stylesheet" href="../css/reset.css"><link rel="stylesheet" href="../css/typography.css">
+<link rel="stylesheet" href="../css/navbar.css"><link rel="stylesheet" href="../css/sections.css"><link rel="stylesheet" href="../css/estimator.css">
+<link rel="stylesheet" href="../css/cta.css"><link rel="stylesheet" href="../css/footer.css"><link rel="stylesheet" href="../css/animations.css"><link rel="stylesheet" href="../css/responsive.css">
+<link rel="stylesheet" href="../css/pages/cotar.css">
+</head>
+<body>
+<header class="site-header"><div class="shell nav"><a class="brand" href="../index.html"><span class="brand-mark">F</span><span class="brand-word">FEITURA<sup>®</sup></span></a><nav class="nav-links"><a href="../index.html#cotacao">Cotação</a><a href="capacidade.html">Capacidade</a><a href="rede.html">Rede</a><a href="feitura.html">FEITURA</a></nav><div class="nav-actions"><a class="text-link" href="capacidade.html">Posso produzir</a><a class="button button-dark button-small" href="cotar.html">Preciso produzir</a></div></div></header>
+<main class="page-main">
+<section class="page-hero"><div class="shell page-hero-grid"><div><div class="section-index mono">FEITURA / DEMANDA</div><p class="kicker">Para empresas e marcas</p><h1>Estruture o que você precisa produzir.</h1><p>Comece com o que sabe. A base produtiva ajuda a completar o que ainda não está definido.</p></div><div class="page-hero-stamp">DEMANDA<br><strong>→</strong><br>CAPACIDADE</div></div></section>
+<section class="quote-workspace"><div class="shell workspace-grid"><form class="workspace-form" data-estimate-form><div class="form-heading"><span class="mono">01</span><h2>O produto</h2></div>
+<label><span>Produto</span><select name="product"><option value="camisa">Camisa básica</option><option value="bermuda">Bermuda social</option><option value="camisa-social">Camisa social</option><option value="bolso">Bolso aplicado</option><option value="punho">Punho</option></select></label>
+<label><span>Quantidade</span><input name="quantity" type="number" min="1" value="300"></label>
+<label><span>Processos por unidade</span><input name="processes" type="number" min="1" value="8"></label>
+<label><span>Tempo por unidade <small>min.</small></span><input name="minutes" type="number" min="1" value="18"></label>
+<label><span>Valor de referência / hora <small>R$</small></span><input name="hourly" type="number" min="1" value="30"></label>
+<button class="button button-dark" type="submit">Calcular referência</button></form>
+<aside class="quote-panel"><div class="panel-label">FEITURA / REFERÊNCIA</div><strong data-result-value>R$ 2.700,00</strong><div class="panel-data"><span><b data-result-hours>90h</b> horas</span><span><b data-result-processes>2.400</b> processos</span><span><b data-result-units>300</b> unidades</span></div><p>O valor é uma referência produtiva, não uma proposta comercial final. Especificação, material, acabamento e condições de produção podem alterar o resultado.</p></aside></div></section>
+<section class="next-step"><div class="shell next-step-inner"><div><span class="kicker">Próximo passo</span><h2>Transforme a cotação em uma demanda.</h2><p>Na próxima etapa, você poderá informar localização, prazo e requisitos para encontrar capacidade compatível.</p></div><button class="button button-dark" type="button" data-demo-action>Continuar</button></div></section>
+</main>
+<footer class="footer"><div class="shell footer-bottom"><span>FEITURA® / RETEAR®</span><span>V1 / BRAZIL</span></div></footer>
+<script type="module" src="../js/main.js"></script></body></html>

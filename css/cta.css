@@ -1,0 +1,8 @@
+.cta{padding:90px 0;background:var(--olive);color:var(--white)}
+.cta-inner{display:flex;align-items:end;justify-content:space-between;gap:50px}
+.cta h2{margin-top:15px;max-width:650px}
+.cta .kicker{color:rgba(251,250,246,.62)}
+.cta-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.next-step{padding:110px 0;background:var(--cream)}
+.next-step-inner{display:flex;justify-content:space-between;gap:60px;align-items:end}
+.next-step h2{margin:15px 0 18px}.next-step p{max-width:650px}

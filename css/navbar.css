@@ -1,0 +1,20 @@
+.site-header{position:fixed;z-index:1000;top:0;left:0;width:100%;border-bottom:1px solid var(--line);background:rgba(238,233,223,.88);backdrop-filter:blur(16px)}
+.nav{height:82px;display:flex;align-items:center;justify-content:space-between;gap:28px}
+.brand{display:inline-flex;align-items:center;gap:11px;white-space:nowrap}
+.brand-mark{display:grid;place-items:center;width:29px;height:29px;border:1px solid var(--ink);font-family:"Libre Baskerville",serif;font-size:16px}
+.brand-word{font-family:"DM Sans",sans-serif;font-size:.86rem;font-weight:700;letter-spacing:.14em}
+.brand-word sup{font-family:"DM Mono",monospace;font-size:.45em;vertical-align:top;margin-left:2px}
+.nav-links{display:flex;gap:30px;font:500 .78rem "DM Sans",sans-serif}
+.nav-links a{position:relative;padding-block:7px}
+.nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:0;height:1px;background:var(--ink);transition:width .3s var(--ease)}
+.nav-links a:hover::after{width:100%}
+.nav-actions{display:flex;align-items:center;gap:18px}
+.text-link{font:600 .72rem "DM Sans",sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border:1px solid transparent;font:700 .72rem "DM Sans",sans-serif;letter-spacing:.1em;text-transform:uppercase;transition:transform .25s var(--ease),background .25s,color .25s,border-color .25s}
+.button:hover{transform:translateY(-2px)}
+.button-small{min-height:42px;padding-inline:18px}
+.button-dark{background:var(--ink);color:var(--white)}
+.button-outline{border-color:var(--ink)}
+.button-paper{background:var(--paper);color:var(--ink)}
+.button-light-outline{border-color:rgba(251,250,246,.55);color:var(--white)}
+.menu-button,.mobile-menu{display:none}

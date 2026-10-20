@@ -1,0 +1,22 @@
+.network{padding:135px 0}
+.network-head{display:grid;grid-template-columns:1fr 360px;gap:80px;align-items:end}
+.network-head h2{margin-top:18px;color:var(--white)}
+.network-head .section-index{color:rgba(251,250,246,.45)}
+.network-intro{color:rgba(251,250,246,.62);font-size:.9rem}
+.network-map{position:relative;height:560px;margin-top:75px;border-top:1px solid var(--line-light);border-bottom:1px solid var(--line-light);overflow:hidden;background:radial-gradient(circle at 50% 50%,rgba(251,250,246,.08),transparent 42%)}
+.network-map::before{content:"";position:absolute;inset:8% 18%;border:1px solid rgba(251,250,246,.08);transform:skewY(-9deg) rotate(-3deg)}
+.map-label{position:absolute;font:500 .64rem "DM Mono",monospace;letter-spacing:.08em;color:rgba(251,250,246,.58)}
+.map-label span{margin-left:8px;color:var(--white)}
+.map-label-a{top:20%;left:12%}.map-label-b{top:68%;left:26%}.map-label-c{top:77%;right:15%}.map-label-d{top:36%;right:22%}
+.map-node{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--paper)}
+.n1{left:25%;top:29%}.n2{left:45%;top:58%}.n3{right:29%;top:34%}.n4{right:18%;top:70%}
+.map-thread{position:absolute;height:1px;background:rgba(251,250,246,.35);transform-origin:left}
+.t1{width:360px;left:26%;top:30%;transform:rotate(29deg)}.t2{width:300px;left:45%;top:59%;transform:rotate(-24deg)}.t3{width:280px;left:46%;top:59%;transform:rotate(-8deg)}
+.map-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:125px;height:125px;border:1px solid rgba(251,250,246,.45);border-radius:50%;display:grid;place-items:center;font:600 .72rem "DM Mono",monospace;letter-spacing:.13em}
+.network-foot{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line-light)}
+.network-foot div{padding:24px 10px 0 0;display:flex;gap:15px}.network-foot div+div{padding-left:20px;border-left:1px solid var(--line-light)}
+.network-foot strong{font:400 1.5rem "Libre Baskerville",serif;color:var(--white)}.network-foot span{font:500 .66rem "DM Mono",monospace;color:rgba(251,250,246,.52);text-transform:uppercase}
+.network-principles{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
+.network-principles article{background:var(--paper);padding:40px}
+.network-principles span{font:500 .68rem "DM Mono",monospace;color:var(--muted)}
+.network-principles h3{margin:20px 0 12px}
