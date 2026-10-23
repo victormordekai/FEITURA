@@ -29,10 +29,6 @@
 .capacity-copy h2{margin:18px 0 28px}
 .capacity-copy p{max-width:610px}
 .text-arrow{display:inline-flex;gap:12px;margin-top:35px;padding-bottom:7px;border-bottom:1px solid var(--ink);font:700 .72rem "DM Sans",sans-serif;text-transform:uppercase;letter-spacing:.1em}
-.manifesto-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.2fr);gap:80px;align-items:center}
-.manifesto-word{font:700 clamp(7rem,16vw,15rem)/.72 "DM Sans",sans-serif;letter-spacing:-.11em;color:var(--olive);opacity:.95}
-.manifesto-grid h2{margin:20px 0 30px;max-width:780px}
-.manifesto-grid p+p{margin-top:18px}
 .two-column{display:grid;grid-template-columns:1fr 1fr;gap:100px;padding:135px 0}
 .two-column h2{margin-top:18px}
 .two-column p+p{margin-top:18px}

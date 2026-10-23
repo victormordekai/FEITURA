@@ -1,81 +1,72 @@
-
 /* =========================================================
    SYMBOL.CSS
-   Responsabilidade:
-   - Controlar a apresentação do símbolo;
-   - Preservar sua proporção;
-   - Não reservar espaço vertical excessivo;
-   - Permitir reutilização em diferentes páginas.
+   Componente visual reutilizável para o símbolo RETEAR.
+   Não controla a posição em relação ao texto: isso pertence
+   ao layout da página (testify.css).
    ========================================================= */
 
-.manifesto-symbol {
+.testify-symbol {
   position: relative;
   display: flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-
   width: 100%;
   min-width: 0;
   height: auto;
   aspect-ratio: auto;
-
   margin: 0;
   padding: 0;
 }
 
-.manifesto-core {
+.testify-core {
   position: relative;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: min(220px, 100%);
   aspect-ratio: 1 / 1;
-
   margin: 0;
   padding: 0;
-
   overflow: hidden;
 }
 
-.manifesto-core img,
-.manifesto-core svg {
-  display: block;
-
+.testify-core a {
+  display: flex;
   width: 100%;
   height: 100%;
-
-  max-width: 100%;
-  max-height: 100%;
-
-  object-fit: contain;
-  object-position: center;
-
-  user-select: none;
-  -webkit-user-drag: none;
-  pointer-events: none;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Variação de tamanho, controlada pela página solicitante. */
+.testify-core img,
+.testify-core svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
 
-.manifesto-symbol--small .manifesto-core {
+/* Variações de tamanho acionadas pelo HTML. */
+.testify-symbol--small .testify-core {
   width: min(120px, 100%);
 }
 
-.manifesto-symbol--medium .manifesto-core {
+.testify-symbol--medium .testify-core {
   width: min(220px, 100%);
 }
 
-.manifesto-symbol--large .manifesto-core {
+.testify-symbol--large .testify-core {
   width: min(320px, 100%);
 }
 
-/* Evita que o símbolo seja deformado em telas estreitas. */
-
 @media (max-width: 480px) {
-  .manifesto-symbol--large .manifesto-core {
+  .testify-symbol--large .testify-core {
     width: min(220px, 100%);
   }
 }
