@@ -1,0 +1,162 @@
+
+/* =========================================================
+   MANIFESTO.CSS
+   Responsabilidade:
+   - Organizar símbolo e texto lado a lado;
+   - Controlar a posição esquerda/direita;
+   - Preservar a hierarquia editorial;
+   - Adaptar a composição para dispositivos móveis.
+   ========================================================= */
+
+.manifesto {
+  --manifesto-symbol-width: 180px;
+  --manifesto-column-gap: clamp(32px, 6vw, 88px);
+  --manifesto-text-width: 560px;
+
+  display: grid;
+  grid-template-columns:
+    minmax(0, var(--manifesto-symbol-width))
+    minmax(0, var(--manifesto-text-width));
+
+  align-items: center;
+  justify-content: center;
+
+  column-gap: var(--manifesto-column-gap);
+  row-gap: 36px;
+
+  width: 100%;
+  max-width: 1200px;
+
+  margin-inline: auto;
+  padding: clamp(32px, 6vw, 88px);
+
+  box-sizing: border-box;
+}
+
+/* O símbolo ocupa somente sua coluna. */
+
+.manifesto > .manifesto-symbol {
+  grid-column: 1;
+  grid-row: 1;
+
+  width: 100%;
+  align-self: center;
+}
+
+/* O texto ocupa a coluna seguinte. */
+
+.manifesto-content {
+  grid-column: 2;
+  grid-row: 1;
+
+  width: 100%;
+  max-width: var(--manifesto-text-width);
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+}
+
+/* Hierarquia tipográfica. */
+
+.manifesto-eyebrow {
+  margin: 0 0 16px;
+
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.manifesto-title {
+  margin: 0;
+
+  font-size: clamp(36px, 4.5vw, 64px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+
+  font-weight: 400;
+  overflow-wrap: normal;
+  text-wrap: balance;
+}
+
+.manifesto-text {
+  margin-top: 28px;
+
+  font-size: 13px;
+  line-height: 1.8;
+
+  max-width: 52ch;
+}
+
+.manifesto-text p {
+  margin: 0 0 16px;
+}
+
+.manifesto-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------------------------------------------------------
+   VARIAÇÃO: símbolo à direita
+   Ativar com .manifesto--symbol-right no contêiner.
+   --------------------------------------------------------- */
+
+.manifesto--symbol-right {
+  grid-template-columns:
+    minmax(0, var(--manifesto-text-width))
+    minmax(0, var(--manifesto-symbol-width));
+}
+
+.manifesto--symbol-right > .manifesto-symbol {
+  grid-column: 2;
+}
+
+.manifesto--symbol-right > .manifesto-content {
+  grid-column: 1;
+}
+
+/* ---------------------------------------------------------
+   RESPONSIVIDADE
+   Em telas estreitas, símbolo e texto passam para uma coluna.
+   --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .manifesto,
+  .manifesto--symbol-right {
+    grid-template-columns: minmax(0, 1fr);
+
+    justify-items: stretch;
+    row-gap: 28px;
+
+    padding: 32px 24px;
+  }
+
+  .manifesto > .manifesto-symbol,
+  .manifesto--symbol-right > .manifesto-symbol {
+    grid-column: 1;
+    grid-row: 1;
+
+    justify-self: start;
+    width: min(140px, 100%);
+  }
+
+  .manifesto > .manifesto-content,
+  .manifesto--symbol-right > .manifesto-content {
+    grid-column: 1;
+    grid-row: 2;
+
+    width: 100%;
+    max-width: none;
+  }
+
+  .manifesto-title {
+    font-size: clamp(34px, 8vw, 48px);
+    line-height: 1;
+  }
+
+  .manifesto-text {
+    margin-top: 24px;
+    max-width: 60ch;
+  }
+}
