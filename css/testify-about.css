@@ -1,0 +1,28 @@
+/* FEITURA.HTML — ajustes específicos da página Sobre.
+   Mantém o componente TESTIFY global, mas restaura escala editorial. */
+.testify--about {
+  --testify-visual-width: clamp(260px, 27vw, 360px);
+  --testify-column-gap: clamp(48px, 7vw, 104px);
+  --testify-copy-width: 700px;
+  max-width: 1500px;
+  padding: clamp(40px, 5vw, 76px);
+}
+.testify--about .testify-core {
+  width: min(320px, 100%);
+}
+.testify--about .testify-title {
+  font-size: clamp(62px, 6.8vw, 96px);
+  line-height: .92;
+}
+.testify--about .testify-text {
+  font-size: 15px;
+  max-width: 62ch;
+}
+@media (max-width: 760px) {
+  .testify--about { padding: 32px 24px; }
+  .testify--about .testify-core { width: min(220px, 100%); }
+  .testify--about .testify-title {
+    font-size: clamp(42px, 9vw, 64px);
+    line-height: .98;
+  }
+}
