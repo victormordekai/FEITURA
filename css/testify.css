@@ -1,25 +1,21 @@
 /* =========================================================
-   TESTIFY.CSS
-   Composição editorial reutilizável:
-   - símbolo e texto lado a lado;
-   - símbolo à esquerda por padrão;
-   - variante à direita via .testify--symbol-right;
-   - empilhamento responsivo em telas estreitas.
+   TESTIFY.CSS — componente editorial global FEITURA
+   Aplicável a todas as páginas.
+   O layout é ativado apenas quando o HTML usa .testify.
    ========================================================= */
 
 .testify {
-  --testify-symbol-width: 180px;
-  --testify-column-gap: clamp(32px, 6vw, 88px);
-  --testify-text-width: 560px;
+  --testify-visual-width: clamp(120px, 18vw, 220px);
+  --testify-gap: clamp(28px, 5vw, 76px);
+  --testify-copy-width: 560px;
 
   display: grid;
   grid-template-columns:
-    minmax(0, var(--testify-symbol-width))
-    minmax(0, var(--testify-text-width));
+    minmax(0, var(--testify-visual-width))
+    minmax(0, var(--testify-copy-width));
   align-items: center;
   justify-content: center;
-  column-gap: var(--testify-column-gap);
-  row-gap: 36px;
+  gap: var(--testify-gap);
 
   width: 100%;
   max-width: 1200px;
@@ -28,21 +24,22 @@
   box-sizing: border-box;
 }
 
-/* Símbolo: permanece na coluna esquerda por padrão. */
-.testify > .testify-symbol {
+.testify > .testify-symbol,
+.testify > .testify-visual {
   grid-column: 1;
   grid-row: 1;
+  align-self: center;
+  justify-self: center;
   width: 100%;
   min-width: 0;
-  align-self: center;
+  margin: 0;
 }
 
-/* Conteúdo textual na coluna direita. */
 .testify-content {
   grid-column: 2;
   grid-row: 1;
   width: 100%;
-  max-width: var(--testify-text-width);
+  max-width: var(--testify-copy-width);
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -52,62 +49,76 @@
   margin: 0 0 16px;
   font-size: 10px;
   line-height: 1.4;
-  letter-spacing: 0.12em;
+  letter-spacing: .12em;
   text-transform: uppercase;
 }
 
 .testify-title {
   margin: 0;
   font-size: clamp(36px, 4.5vw, 64px);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
+  line-height: .98;
+  letter-spacing: -.045em;
   font-weight: 400;
-  overflow-wrap: normal;
   text-wrap: balance;
+  overflow-wrap: normal;
 }
 
 .testify-text {
-  margin-top: 28px;
   max-width: 52ch;
+  margin-top: 28px;
   font-size: 13px;
   line-height: 1.8;
 }
 
-.testify-text p {
-  margin: 0 0 16px;
+.testify-text p { margin: 0 0 16px; }
+.testify-text p:last-child { margin-bottom: 0; }
+
+/* Visual editorial que não é uma imagem, ex.: lettering FEITURA */
+.testify-wordmark {
+  display: block;
+  width: 100%;
+  font-family: var(--font-serif, "Libre Baskerville", Georgia, serif);
+  font-size: clamp(42px, 7vw, 100px);
+  line-height: .82;
+  letter-spacing: -.065em;
+  text-align: left;
 }
 
-.testify-text p:last-child {
-  margin-bottom: 0;
-}
-
-/* Variante: símbolo à direita e texto à esquerda. */
-.testify--symbol-right {
+/* Variante com visual à direita */
+.testify--visual-right {
   grid-template-columns:
-    minmax(0, var(--testify-text-width))
-    minmax(0, var(--testify-symbol-width));
+    minmax(0, var(--testify-copy-width))
+    minmax(0, var(--testify-visual-width));
 }
-
-.testify--symbol-right > .testify-symbol {
+.testify--visual-right > .testify-symbol,
+.testify--visual-right > .testify-visual {
   grid-column: 2;
 }
+.testify--visual-right > .testify-content { grid-column: 1; }
 
-.testify--symbol-right > .testify-content {
-  grid-column: 1;
+/* Alias compatível com a nomenclatura anterior */
+.testify--symbol-right { 
+  grid-template-columns:
+    minmax(0, var(--testify-copy-width))
+    minmax(0, var(--testify-visual-width));
 }
+.testify--symbol-right > .testify-symbol { grid-column: 2; }
+.testify--symbol-right > .testify-content { grid-column: 1; }
 
-/* Responsividade: empilha símbolo e texto sem comprimir as colunas. */
 @media (max-width: 700px) {
   .testify,
+  .testify.testify--visual-right,
   .testify.testify--symbol-right {
     grid-template-columns: minmax(0, 1fr);
-    justify-items: stretch;
-    row-gap: 28px;
+    gap: 26px;
     padding: 32px 24px;
   }
 
   .testify > .testify-symbol,
-  .testify.testify--symbol-right > .testify-symbol {
+  .testify > .testify-visual,
+  .testify--visual-right > .testify-symbol,
+  .testify--visual-right > .testify-visual,
+  .testify--symbol-right > .testify-symbol {
     grid-column: 1;
     grid-row: 1;
     justify-self: start;
@@ -115,10 +126,10 @@
   }
 
   .testify > .testify-content,
-  .testify.testify--symbol-right > .testify-content {
+  .testify--visual-right > .testify-content,
+  .testify--symbol-right > .testify-content {
     grid-column: 1;
     grid-row: 2;
-    width: 100%;
     max-width: none;
   }
 
@@ -127,8 +138,6 @@
     line-height: 1;
   }
 
-  .testify-text {
-    margin-top: 24px;
-    max-width: 60ch;
-  }
+  .testify-text { margin-top: 22px; max-width: 60ch; }
+  .testify-wordmark { font-size: clamp(42px, 12vw, 72px); }
 }

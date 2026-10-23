@@ -1,26 +1,20 @@
 /* =========================================================
-   SYMBOL.CSS
-   Componente visual reutilizável para o símbolo RETEAR.
-   Não controla a posição em relação ao texto: isso pertence
-   ao layout da página (testify.css).
+   SYMBOL.CSS — apresentação do símbolo, sem decidir layout.
+   O posicionamento horizontal pertence a testify.css.
    ========================================================= */
 
 .testify-symbol {
-  position: relative;
   display: flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-width: 0;
-  height: auto;
-  aspect-ratio: auto;
   margin: 0;
   padding: 0;
 }
 
 .testify-core {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,15 +22,14 @@
   aspect-ratio: 1 / 1;
   margin: 0;
   padding: 0;
-  overflow: hidden;
 }
 
 .testify-core a {
   display: flex;
-  width: 100%;
-  height: 100%;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .testify-core img,
@@ -52,21 +45,10 @@
   -webkit-user-drag: none;
 }
 
-/* Variações de tamanho acionadas pelo HTML. */
-.testify-symbol--small .testify-core {
-  width: min(120px, 100%);
-}
-
-.testify-symbol--medium .testify-core {
-  width: min(220px, 100%);
-}
-
-.testify-symbol--large .testify-core {
-  width: min(320px, 100%);
-}
+.testify-symbol--small .testify-core { width: min(120px, 100%); }
+.testify-symbol--medium .testify-core { width: min(220px, 100%); }
+.testify-symbol--large .testify-core { width: min(320px, 100%); }
 
 @media (max-width: 480px) {
-  .testify-symbol--large .testify-core {
-    width: min(220px, 100%);
-  }
+  .testify-symbol--large .testify-core { width: min(220px, 100%); }
 }
