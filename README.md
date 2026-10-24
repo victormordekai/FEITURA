@@ -76,3 +76,7 @@ FEITURA®
 ## Gate 1 final consolidado
 
 A entrega final inclui o glossário público integrado à cotação, o motor de orçamento `FEITURA(x) = ax + b`, o manifesto editorial em `pages/manifesto.html` e o módulo preparado para contador agregado via Apps Script. Consulte `docs/GATE_1_FINAL_DELIVERY.md` para o escopo e as fronteiras da entrega.
+
+## Correção responsiva — 24/10/2026
+
+A revisão final de Gate 1 corrige a aplicação do atributo HTML `hidden` sobre componentes com `display:flex/grid` e padroniza o menu responsivo das páginas internas. O detalhe técnico está documentado em `docs/GATE_1_RESPONSIVE_FIX_2026-10-24.md`.

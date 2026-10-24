@@ -4,5 +4,6 @@ body{min-width:320px;background:var(--paper);color:var(--ink);overflow-x:hidden}
 img{display:block;max-width:100%}
 button,input,select{font:inherit}
 button{cursor:pointer}
+[hidden]{display:none !important}
 a{color:inherit;text-decoration:none}
 ::selection{background:var(--olive);color:var(--white)}
