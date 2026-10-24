@@ -316,177 +316,228 @@
 
     </section>
 
-    <!-- COTAÇÃO -->
+    <!-- ORÇAMENTO / BASE TÉCNICA -->
 
-    <section class="quote-workspace">
+    <section class="quote-workspace feitura-quote" data-feitura-quote id="orcamento">
 
-      <div class="shell workspace-grid">
+      <div class="shell">
 
-        <form
-          class="workspace-form"
-          data-estimate-form
-        >
-
-          <div class="form-heading">
-
-            <span class="mono">
-              01
-            </span>
-
-            <h2>
-              O produto
-            </h2>
-
+        <div class="quote-intro">
+          <div>
+            <div class="section-index mono">01 / ORÇAMENTO</div>
+            <p class="kicker">Uma base para quem produz e para quem contrata</p>
+            <h2>O orçamento começa pelo trabalho que será realizado.</h2>
           </div>
-
-          <label>
-
-            <span>
-              Produto
-            </span>
-
-            <select name="product">
-
-              <option value="camisa">
-                Camisa básica
-              </option>
-
-              <option value="bermuda">
-                Bermuda social
-              </option>
-
-              <option value="camisa-social">
-                Camisa social
-              </option>
-
-              <option value="bolso">
-                Bolso aplicado
-              </option>
-
-              <option value="punho">
-                Punho
-              </option>
-
-            </select>
-
-          </label>
-
-          <label>
-
-            <span>
-              Quantidade
-            </span>
-
-            <input
-              name="quantity"
-              type="number"
-              min="1"
-              value="300"
-            >
-
-          </label>
-
-          <label>
-
-            <span>
-              Processos por unidade
-            </span>
-
-            <input
-              name="processes"
-              type="number"
-              min="1"
-              value="8"
-            >
-
-          </label>
-
-          <label>
-
-            <span>
-              Tempo por unidade
-              <small>min.</small>
-            </span>
-
-            <input
-              name="minutes"
-              type="number"
-              min="1"
-              value="18"
-            >
-
-          </label>
-
-          <label>
-
-            <span>
-              Valor de referência / hora
-              <small>R$</small>
-            </span>
-
-            <input
-              name="hourly"
-              type="number"
-              min="1"
-              value="30"
-            >
-
-          </label>
-
-          <button
-            class="button button-dark"
-            type="submit"
-          >
-            Calcular referência
-          </button>
-
-        </form>
-
-        <aside class="quote-panel">
-
-          <div class="panel-label">
-            FEITURA / REFERÊNCIA
-          </div>
-
-          <strong data-result-value>
-            R$ 2.700,00
-          </strong>
-
-          <div class="panel-data">
-
-            <span>
-              <b data-result-hours>
-                90h
-              </b>
-              horas
-            </span>
-
-            <span>
-              <b data-result-processes>
-                2.400
-              </b>
-              processos
-            </span>
-
-            <span>
-              <b data-result-units>
-                300
-              </b>
-              unidades
-            </span>
-
-          </div>
-
           <p>
-            O valor é uma referência produtiva, não uma proposta comercial
-            final. Especificação, material, acabamento e condições de produção
-            podem alterar o resultado.
+            Consulte a base técnica pública da FEITURA, selecione artigos,
+            operações ou serviços e escolha como quer transformar tempo,
+            quantidade e referência de valor em um orçamento ou catálogo.
           </p>
+        </div>
 
-        </aside>
+        <div class="quote-mode" role="tablist" aria-label="Modo de orçamento">
+          <button type="button" data-mode-button="producer" aria-selected="true" role="tab">
+            Eu produzo
+            <small>calcular meu preço e catálogo</small>
+          </button>
+          <button type="button" data-mode-button="buyer" aria-selected="false" role="tab">
+            Eu contrato produção
+            <small>estruturar uma demanda e um romaneio</small>
+          </button>
+        </div>
+
+        <div class="quote-panel-grid">
+
+          <section class="quote-builder" data-mode-panel="producer">
+            <div class="form-heading">
+              <span class="mono">01</span>
+              <h3>Seu valor de referência</h3>
+            </div>
+            <p class="form-note">
+              Se você produz, o valor-hora é uma variável sua. A FEITURA usa
+              esse valor junto ao tempo técnico estimado para calcular o preço
+              de cada item selecionado.
+            </p>
+            <div class="builder-fields">
+              <label>
+                <span>Valor-hora produtivo <small>R$ / h</small></span>
+                <input name="hourly" type="number" min="0" step="0.01" placeholder="Ex.: 32,00">
+              </label>
+              <label>
+                <span>Quantidade de referência <small>un.</small></span>
+                <input name="quantity" type="number" min="1" value="100">
+              </label>
+            </div>
+            <div class="builder-actions">
+              <a class="text-arrow" href="capacidade.html">Calcular meu valor-hora primeiro ↗</a>
+              <button type="button" class="button button-dark" data-export-briefing>Gerar orçamento</button>
+            </div>
+          </section>
+
+          <section class="quote-builder" data-mode-panel="buyer" hidden>
+            <div class="form-heading">
+              <span class="mono">01</span>
+              <h3>O que você precisa produzir?</h3>
+            </div>
+            <p class="form-note">
+              Quem contrata não precisa conhecer a tarifa-hora de uma prestadora.
+              Informe artigo, lote e, se desejar, o teto que pretende pagar por
+              unidade. A base técnica mostra o tempo de referência e calcula a
+              hora implícita desse teto.
+            </p>
+            <div class="builder-fields">
+              <label>
+                <span>Quantidade do lote <small>un.</small></span>
+                <input name="quantity" type="number" min="1" value="300">
+              </label>
+              <label>
+                <span>Valor máximo por unidade <small>R$</small></span>
+                <input name="maxUnitPrice" type="number" min="0" step="0.01" placeholder="Opcional">
+              </label>
+            </div>
+            <div class="buyer-result" data-buyer-result hidden>
+              <div><span>Tempo de referência</span><strong data-reference-minutes>0 min./un.</strong></div>
+              <div><span>Hora implícita do seu teto</span><strong data-implied-hourly>R$ 0,00</strong></div>
+              <div><span>Tempo total estimado</span><strong data-reference-total-hours>0h</strong></div>
+            </div>
+            <div class="builder-actions">
+              <span class="form-note-inline">Selecione pelo menos um artigo abaixo.</span>
+              <button type="button" class="button button-dark" data-export-briefing>Gerar romaneio de referência</button>
+            </div>
+          </section>
+
+          <aside class="quote-summary">
+            <div class="panel-label">FEITURA / SELEÇÃO</div>
+            <strong data-catalog-total>R$ 0,00</strong>
+            <div class="panel-data">
+              <span><b data-catalog-count>0 itens selecionados</b>base</span>
+              <span><b data-catalog-hours>0h</b>tempo estimado</span>
+              <span><b>local</b>sem cadastro</span>
+            </div>
+            <p>
+              O cálculo é executado no navegador. Nesta versão, os dados não são
+              enviados nem armazenados remotamente.
+            </p>
+            <div class="summary-actions">
+              <button type="button" class="button button-paper" data-export-catalog>Exportar catálogo</button>
+              <button type="button" class="text-button" data-print-catalog>Imprimir / salvar PDF</button>
+            </div>
+          </aside>
+
+        </div>
+
+        <section class="formula-workspace" aria-labelledby="formula-title">
+          <div class="formula-heading">
+            <div>
+              <div class="section-index mono">03 / FUNÇÃO DO VALOR</div>
+              <p class="kicker">Manifesto justo do valor</p>
+              <h2 id="formula-title">O orçamento pode apresentar a própria regra.</h2>
+            </div>
+            <p><strong>FEITURA(x) = ax + b</strong>. A função separa o componente variável do lote, o custo fixo de oportunidade e a quantidade. O motor resolve a variável escolhida sem esconder a composição do resultado.</p>
+          </div>
+
+          <div class="formula-grid">
+            <div class="formula-fields">
+              <label><span>Resolver</span><select data-formula-unknown><option value="F">FEITURA</option><option value="x">Quantidade (x)</option><option value="a">Componente variável (a)</option><option value="b">Custo fixo (b)</option></select></label>
+              <label><span>Quantidade (x)</span><input data-formula-x type="number" min="0" step="1" value="30"></label>
+              <label><span>Componente variável (a)</span><input data-formula-a type="number" min="0" step="0.01" placeholder="Ex.: 18,00"></label>
+              <label><span>Custo fixo (b)</span><input data-formula-b type="number" min="0" step="0.01" placeholder="Ex.: 45,00"></label>
+              <label><span>FEITURA</span><input data-formula-f type="number" min="0" step="0.01" placeholder="Ex.: 585,00"></label>
+            </div>
+            <div class="formula-result">
+              <span class="mono">RESULTADO</span>
+              <strong data-formula-result>Informe os componentes conhecidos.</strong>
+              <div class="formula-display" data-formula-display>FEITURA(x) = ax + b</div>
+              <p data-formula-explanation>O cálculo permanece local no navegador. Valores derivados de estimativas devem ser tratados como referências, não como preço universal de mercado.</p>
+              <a href="manifesto.html">Por que uma função de primeiro grau? Ler o manifesto ↗</a>
+            </div>
+          </div>
+        </section>
 
       </div>
 
+    </section>
+
+    <section class="section-paper glossary-section" id="glossario">
+      <div class="shell">
+        <div class="glossary-heading">
+          <div>
+            <div class="section-index mono">02 / GLOSSÁRIO PÚBLICO</div>
+            <p class="kicker">Base técnica FEITURA</p>
+            <h2>Consulte o que existe dentro de um produto.</h2>
+          </div>
+          <p>
+            A base pública reúne artigos e modelos, operações de construção,
+            serviços de conserto, método de cronoanálise e fontes de referência.
+            Cada registro mantém sua natureza de dado e sua limitação.
+          </p>
+        </div>
+
+        <div class="glossary-toolbar">
+          <label class="glossary-search">
+            <span class="mono">BUSCAR</span>
+            <input type="search" data-glossary-search placeholder="Produto, operação, componente, acabamento...">
+          </label>
+          <label>
+            <span class="mono">GRUPO</span>
+            <select data-glossary-filter>
+              <option value="all">Toda a base</option>
+              <option value="models">Artigos e modelos</option>
+              <option value="operations">Operações</option>
+              <option value="repairs">Consertos e serviços</option>
+              <option value="methods">Método de cronoanálise</option>
+              <option value="sources">Fontes e referências</option>
+            </select>
+          </label>
+          <div class="glossary-tools">
+            <button type="button" class="text-button" data-select-all>Selecionar base</button>
+            <button type="button" class="text-button" data-clear-selection>Limpar seleção</button>
+          </div>
+        </div>
+
+        <div class="glossary-list" data-glossary-list></div>
+
+        <div class="glossary-method">
+          <div>
+            <span class="kicker">Método e limites</span>
+            <h3>Tempo estimado não é tempo cronometrado.</h3>
+          </div>
+          <div>
+            <p>
+              A base distingue estimativas de engenharia, referências externas
+              e dados que ainda precisam de validação por cronoanálise. Perímetro,
+              velocidade efetiva, manuseio, preparação, setup, ritmo, tolerâncias
+              e condições do lote precisam permanecer explícitos no cálculo.
+            </p>
+            <p>
+              Os tempos publicados nesta versão são referências iniciais e não
+              representam preço universal de facção ou produtividade garantida.
+            </p>
+          </div>
+        </div>
+
+        <div class="glossary-sources">
+          <div>
+            <span class="kicker">Autoria e curadoria</span>
+            <h3>FEITURA por Victor Ferreira.</h3>
+          </div>
+          <div>
+            <p>
+              Gerente de Operações | Produção, Processos e Design |
+              Moda, Indústria & Tecnologia | Private Label & B2B
+            </p>
+            <p>
+              A base é organizada e indexada pela FEITURA como aplicação do
+              ecossistema RETEAR®, preservando a identificação das fontes
+              externas e suas respectivas limitações.
+            </p>
+            <div class="source-links">
+              <a href="https://www.linkedin.com/in/victormordekai/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+              <a href="https://wa.me/5541997584893?text=Ol%C3%A1%21%20Conheci%20o%20projeto%20FEITURA%2C%20quero%20fazer%20uma%20mentoria%20RETEAR%21" target="_blank" rel="noopener noreferrer">Mentoria RETEAR no WhatsApp ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- PRÓXIMO PASSO -->
@@ -531,17 +582,18 @@
 	<footer class="footer">
 	  <div class="shell footer-grid">
 		<div>
-		  <a class="brand footer-brand" href="index.html">
+		  <a class="brand footer-brand" href="../index.html">
 			<span class="brand-mark">F</span><span class="brand-word">FEITURA<sup>®</sup></span>
 		  </a>
 		  <p>Conexão produtiva entre demanda, capacidade e trabalho.</p>
 		</div>
 		<div>
 		  <span class="footer-title">FEITURA</span>
-		  <a href="pages/cotar.html">Cotação</a>
-		  <a href="pages/capacidade.html">Capacidade</a>
-		  <a href="pages/rede.html">Rede</a>
-		  <a href="pages/feitura.html">Sobre</a>
+		  <a href="cotar.html">Cotação</a>
+		  <a href="capacidade.html">Capacidade</a>
+		  <a href="rede.html">Rede</a>
+		  <a href="feitura.html">Sobre</a>
+      <a href="manifesto.html">Manifesto</a>
 		</div>
 		<div>
 		  <span class="footer-title">Arquitetura</span>
@@ -560,6 +612,7 @@
 		</div>
 	  </div>
 		<div class="shell footer-bottom">
+    <span class="visitor-counter" hidden aria-live="polite">VISITAS <strong data-visitor-count>0</strong></span>
 		  <span>
 			FEITURA® é uma frente do ecossistema
 			<a href="https://victormordekai.github.io/RE-TEAR/"

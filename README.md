@@ -73,3 +73,6 @@ FEITURA®
      ├── estimativa
      ├── rede produtiva
      └── dados de produção
+## Gate 1 final consolidado
+
+A entrega final inclui o glossário público integrado à cotação, o motor de orçamento `FEITURA(x) = ax + b`, o manifesto editorial em `pages/manifesto.html` e o módulo preparado para contador agregado via Apps Script. Consulte `docs/GATE_1_FINAL_DELIVERY.md` para o escopo e as fronteiras da entrega.
