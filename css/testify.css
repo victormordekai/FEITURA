@@ -147,3 +147,8 @@
     font-size: clamp(44px, 12vw, 76px);
   }
 }
+
+/* Identidade tipográfica FEITURA: somente ocorrências que usam a fonte do logo. */
+.testify-wordmark {
+  color: var(--olive);
+}

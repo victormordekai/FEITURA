@@ -18,3 +18,8 @@
 .button-paper{background:var(--paper);color:var(--ink)}
 .button-light-outline{border-color:rgba(251,250,246,.55);color:var(--white)}
 .menu-button,.mobile-menu{display:none}
+
+/* A fonte identitária permanece restrita ao wordmark da marca. */
+.brand-word {
+  color: var(--olive);
+}

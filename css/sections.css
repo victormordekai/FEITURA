@@ -40,3 +40,34 @@
 .page-hero-stamp{border:1px solid var(--line);padding:24px;text-align:center;font:600 .7rem "DM Mono",monospace;letter-spacing:.08em;line-height:1.8}
 .page-hero-stamp strong{font-size:1.1rem;color:var(--clay)}
 .page-copy{padding-bottom:30px}
+
+/* FEITURA.HTML — ecossistema em composição vertical.
+   O título conserva alinhamento à esquerda, mas todo o conjunto
+   permanece centralizado dentro do campo editorial da página. */
+.feitura-ecosystem .two-column {
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(38px, 5vw, 64px);
+  max-width: 980px;
+  margin-inline: auto;
+}
+
+.feitura-ecosystem .two-column > div {
+  width: 100%;
+  max-width: 860px;
+  margin-inline: auto;
+}
+
+.feitura-ecosystem .two-column > div:last-child {
+  max-width: 760px;
+}
+
+@media (max-width: 600px) {
+  .feitura-ecosystem .two-column {
+    gap: 34px;
+  }
+
+  .feitura-ecosystem .two-column > div,
+  .feitura-ecosystem .two-column > div:last-child {
+    max-width: none;
+  }
+}

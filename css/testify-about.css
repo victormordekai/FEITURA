@@ -1,28 +1,85 @@
-/* FEITURA.HTML — ajustes específicos da página Sobre.
-   Mantém o componente TESTIFY global, mas restaura escala editorial. */
+/* FEITURA.HTML — composição específica da relação RETEAR / FEITURA.
+   O visual ocupa aproximadamente um terço da composição no desktop;
+   o conteúdo permanece amplo e deslocado para a direita. */
 .testify--about {
-  --testify-visual-width: clamp(260px, 27vw, 360px);
-  --testify-column-gap: clamp(48px, 7vw, 104px);
-  --testify-copy-width: 700px;
+  --testify-column-gap: clamp(48px, 5vw, 96px);
+  --testify-copy-width: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: center;
+  width: min(100%, 1500px);
   max-width: 1500px;
-  padding: clamp(40px, 5vw, 76px);
+  margin-inline: auto;
+  padding: clamp(56px, 6vw, 96px) clamp(28px, 5vw, 80px);
+  column-gap: var(--testify-column-gap);
 }
+
+.testify--about > .testify-symbol {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  justify-self: center;
+}
+
 .testify--about .testify-core {
-  width: min(320px, 100%);
+  width: min(100%, 520px);
+  aspect-ratio: 1 / 1;
 }
+
+.testify--about .testify-content {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  max-width: 900px;
+  padding-left: clamp(0px, 2.5vw, 42px);
+}
+
 .testify--about .testify-title {
-  font-size: clamp(62px, 6.8vw, 96px);
+  font-size: clamp(62px, 6.8vw, 104px);
   line-height: .92;
+  max-width: 760px;
 }
+
 .testify--about .testify-text {
+  max-width: 72ch;
   font-size: 15px;
-  max-width: 62ch;
+  line-height: 1.8;
 }
+
 @media (max-width: 760px) {
-  .testify--about { padding: 32px 24px; }
-  .testify--about .testify-core { width: min(220px, 100%); }
+  .testify--about {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 36px;
+    padding: 56px 24px 64px;
+  }
+
+  .testify--about > .testify-symbol {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+  }
+
+  .testify--about .testify-core {
+    width: min(50vw, 320px);
+  }
+
+  .testify--about .testify-content {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    max-width: none;
+    padding-left: 0;
+  }
+
   .testify--about .testify-title {
-    font-size: clamp(42px, 9vw, 64px);
-    line-height: .98;
+    font-size: clamp(42px, 11vw, 70px);
+    line-height: .96;
+    max-width: 100%;
+  }
+
+  .testify--about .testify-text {
+    margin-top: 24px;
+    max-width: 62ch;
+    font-size: 14px;
   }
 }
