@@ -1,0 +1,30 @@
+.hero{position:relative;min-height:850px;padding:155px 0 95px;background:var(--paper);overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(23,23,19,.10) .6px,transparent .6px);background-size:7px 7px;opacity:.13;pointer-events:none}
+.hero-grain{position:absolute;inset:0;opacity:.22;background:linear-gradient(100deg,transparent 0 45%,rgba(57,67,55,.06) 45.1% 45.3%,transparent 45.4% 100%)}
+.hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.03fr) minmax(390px,.97fr);gap:80px;align-items:center}
+.hero-copy{padding-bottom:30px}
+.hero-copy h1{max-width:800px;margin:24px 0 30px}
+.hero-copy h1 em{font-style:italic;color:var(--olive)}
+.eyebrow{display:flex;align-items:center;gap:12px}
+.eyebrow-rule{width:38px;height:1px;background:var(--ink)}
+.hero-actions{display:flex;gap:10px;margin-top:34px;flex-wrap:wrap}
+.hero-note{display:flex;gap:18px;margin-top:52px;padding-top:15px;border-top:1px solid var(--line);font:500 .7rem "DM Sans",sans-serif;color:var(--muted)}
+.hero-note .mono{font-size:.62rem;color:var(--ink)}
+.hero-object{position:relative;min-height:540px;display:grid;place-items:center}
+.production-sheet{position:relative;width:min(440px,88%);background:var(--white);padding:28px;box-shadow:var(--shadow);border:1px solid rgba(23,23,19,.12);transform:rotate(2deg)}
+.sheet-head,.sheet-line,.sheet-grid,.sheet-footer{display:flex;justify-content:space-between}
+.sheet-head{padding-bottom:18px;border-bottom:1px solid var(--line);font:600 .64rem "DM Mono",monospace;letter-spacing:.1em}
+.sheet-line{padding:26px 0;font:600 1rem "DM Sans",sans-serif}
+.sheet-line.strong{border-bottom:1px solid var(--line)}
+.sheet-grid{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
+.sheet-grid div{padding:22px 0;border-bottom:1px solid var(--line)}
+.sheet-grid div:nth-child(odd){border-right:1px solid var(--line);padding-right:15px}
+.sheet-grid div:nth-child(even){padding-left:15px}
+.sheet-grid span,.sheet-footer{font:500 .58rem "DM Mono",monospace;letter-spacing:.08em;color:var(--muted)}
+.sheet-grid strong{display:block;margin-top:7px;font:400 2rem "Libre Baskerville",serif}
+.sheet-footer{padding-top:20px;align-items:center;gap:10px}
+.sheet-footer i{height:1px;flex:1;background:var(--ink)}
+.thread{position:absolute;height:1px;background:var(--clay);transform-origin:left}
+.thread-a{width:310px;right:0;top:29%;transform:rotate(27deg)}
+.thread-b{width:280px;left:0;bottom:20%;transform:rotate(-22deg)}
+.hero-caption{position:absolute;bottom:4%;right:2%;font:italic 1rem "Libre Baskerville",serif;color:var(--olive)}

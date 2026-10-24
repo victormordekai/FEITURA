@@ -1,0 +1,149 @@
+/* =========================================================
+   TESTIFY.CSS — composição editorial global
+   Símbolo à esquerda por padrão; texto em coluna ampla.
+   Use .testify--symbol-right para inverter no desktop.
+   ========================================================= */
+
+.testify {
+  --testify-visual-width: clamp(240px, 25vw, 340px);
+  --testify-column-gap: clamp(40px, 6vw, 96px);
+  --testify-copy-width: 680px;
+
+  display: grid;
+  grid-template-columns:
+    minmax(0, var(--testify-visual-width))
+    minmax(0, var(--testify-copy-width));
+  align-items: center;
+  justify-content: center;
+  column-gap: var(--testify-column-gap);
+  row-gap: 36px;
+
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: clamp(32px, 4vw, 64px);
+  box-sizing: border-box;
+}
+
+.testify > .testify-symbol,
+.testify > .testify-visual {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.testify-content {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  max-width: var(--testify-copy-width);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.testify-eyebrow {
+  margin: 0 0 20px;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.testify-title {
+  margin: 0;
+  font-size: clamp(56px, 6.2vw, 88px);
+  line-height: .94;
+  letter-spacing: -.05em;
+  font-weight: 400;
+  text-wrap: balance;
+  overflow-wrap: normal;
+}
+
+.testify-text {
+  max-width: 62ch;
+  margin-top: 32px;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.testify-text p { margin: 0 0 18px; }
+.testify-text p:last-child { margin-bottom: 0; }
+
+/* Visual textual, como o wordmark FEITURA na página inicial. */
+.testify-wordmark {
+  display: block;
+  width: 100%;
+  font-family: "Feitura Display Prototype", sans-serif;
+  font-size: clamp(52px, 7vw, 104px);
+  line-height: .84;
+  letter-spacing: -.065em;
+  text-align: left;
+}
+
+/* Alternativa: texto à esquerda, símbolo/visual à direita. */
+.testify--symbol-right,
+.testify--visual-right {
+  grid-template-columns:
+    minmax(0, var(--testify-copy-width))
+    minmax(0, var(--testify-visual-width));
+}
+
+.testify--symbol-right > .testify-symbol,
+.testify--visual-right > .testify-symbol,
+.testify--visual-right > .testify-visual {
+  grid-column: 2;
+}
+
+.testify--symbol-right > .testify-content,
+.testify--visual-right > .testify-content {
+  grid-column: 1;
+}
+
+@media (max-width: 760px) {
+  .testify,
+  .testify.testify--symbol-right,
+  .testify.testify--visual-right {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 28px;
+    padding: 32px 24px;
+  }
+
+  .testify > .testify-symbol,
+  .testify > .testify-visual,
+  .testify--symbol-right > .testify-symbol,
+  .testify--visual-right > .testify-symbol,
+  .testify--visual-right > .testify-visual {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    width: min(220px, 100%);
+  }
+
+  .testify > .testify-content,
+  .testify--symbol-right > .testify-content,
+  .testify--visual-right > .testify-content {
+    grid-column: 1;
+    grid-row: 2;
+    max-width: none;
+  }
+
+  .testify-title {
+    font-size: clamp(42px, 9vw, 64px);
+    line-height: .98;
+  }
+
+  .testify-text {
+    margin-top: 24px;
+    font-size: 14px;
+    max-width: 60ch;
+  }
+
+  .testify-wordmark {
+    font-size: clamp(44px, 12vw, 76px);
+  }
+}

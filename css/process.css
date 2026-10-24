@@ -1,0 +1,7 @@
+.process{padding:135px 0}
+.process-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:70px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.process-grid article{padding:35px 25px 40px 0}
+.process-grid article+article{padding-left:25px;border-left:1px solid var(--line)}
+.process-grid span{font:500 .68rem "DM Mono",monospace;color:var(--clay)}
+.process-grid h3{margin:30px 0 15px}
+.process-grid p{font-size:.85rem}

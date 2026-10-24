@@ -1,0 +1,12 @@
+.faq{padding:135px 0}
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:100px}
+.faq-grid>div:first-child h2{margin-top:20px}
+.faq-item{border-top:1px solid var(--line)}
+.faq-item:last-child{border-bottom:1px solid var(--line)}
+.faq-item button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;background:none;border:0;text-align:left;font:600 .86rem "DM Sans",sans-serif;color:var(--ink)}
+.faq-item button span{font:400 1.2rem "DM Mono",monospace;transition:transform .25s}
+.faq-item>div{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+.faq-item>div p{overflow:hidden;font-size:.86rem;padding-right:35px}
+.faq-item.open>div{grid-template-rows:1fr}
+.faq-item.open button span{transform:rotate(45deg)}
+.faq-item.open>div p{padding-bottom:25px}

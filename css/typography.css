@@ -1,0 +1,12 @@
+@font-face{font-family:"Feitura Display Prototype";src:url("../assets/fonts/feitura-fonte.otf") format("opentype");font-weight:400;font-style:normal;font-display:swap}
+.shell{width:min(calc(100% - 64px),var(--container));margin-inline:auto}
+.narrow{max-width:var(--narrow)}
+.mono{font-family:"DM Mono",monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}
+.kicker,.eyebrow{font-family:"DM Sans",sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.section-index{font-family:"DM Mono",monospace;font-size:.67rem;letter-spacing:.14em;color:var(--muted)}
+h1,h2,h3{font-family:"Libre Baskerville",Georgia,serif;font-weight:400;line-height:1.04}
+h1{font-size:clamp(3.4rem,7vw,7.4rem);letter-spacing:-.055em}
+h2{font-size:clamp(2.4rem,4.6vw,5.2rem);letter-spacing:-.045em}
+h3{font-size:1.45rem}
+p{font-family:"DM Sans",sans-serif;line-height:1.75;color:var(--muted)}
+.hero-lead{font-size:1.12rem;max-width:590px}

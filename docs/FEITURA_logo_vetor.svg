@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1774" height="887" viewBox="0 0 1774 887">
+  <rect width="1774" height="887" fill="#EDE7DA"/>
+  <!-- símbolo -->
+  <rect x="316" y="278" width="256" height="256" rx="54" fill="#596047"/>
+  <!-- monograma F -->
+  <path d="M399 338 H503 V352 H416 V400 H485 V414 H416 V489 H399 Z" fill="#F5F0E7"/>
+  <path d="M365 414 C398 407 432 409 466 414 C485 417 501 417 519 413 C498 425 481 430 459 429 C426 428 394 420 365 414 Z" fill="#F5F0E7"/>
+  <!-- divisor -->
+  <rect x="620" y="291" width="2" height="231" fill="#596047"/>
+  <!-- wordmark -->
+  <text x="694" y="453" fill="#39402F" font-family="Lato, Arial, sans-serif" font-size="132" font-weight="300" letter-spacing="8">FEITURA</text>
+  <!-- tagline -->
+  <text x="695" y="511" fill="#596047" font-family="Lato, Arial, sans-serif" font-size="18" font-weight="400" letter-spacing="8">PRODUÇÃO  ·  PESSOAS  ·  POSSIBILIDADES</text>
+</svg>
