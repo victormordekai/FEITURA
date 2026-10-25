@@ -302,11 +302,14 @@
             <p class="kicker">Uma base para quem produz e para quem contrata</p>
             <h2>O orçamento começa pelo trabalho que será realizado.</h2>
           </div>
-          <p>
-            Consulte a base técnica pública da FEITURA, selecione artigos,
-            operações ou serviços e escolha como quer transformar tempo,
-            quantidade e referência de valor em um orçamento ou catálogo.
-          </p>
+          <div class="quote-intro-actions">
+            <p>
+              Consulte o banco de dados técnico público da FEITURA, selecione artigos,
+              operações ou serviços e transforme tempo, quantidade e referência de valor
+              em um orçamento ou romaneio.
+            </p>
+            <a class="button button-paper" href="#base-tecnica" data-open-database>Acessar banco de dados técnico ↘</a>
+          </div>
         </div>
 
         <div class="quote-mode" role="tablist" aria-label="Modo de orçamento">
@@ -325,12 +328,11 @@
           <section class="quote-builder" data-mode-panel="producer">
             <div class="form-heading">
               <span class="mono">01</span>
-              <h3>Seu valor de referência</h3>
+              <h3>Defina a referência do orçamento</h3>
             </div>
             <p class="form-note">
-              Se você produz, o valor-hora é uma variável sua. A FEITURA usa
-              esse valor junto ao tempo técnico estimado para calcular o preço
-              de cada item selecionado.
+              Informe o valor-hora do seu trabalho e o tamanho do lote. A FEITURA
+              aplica essa referência aos tempos da base técnica selecionados abaixo.
             </p>
             <div class="builder-fields">
               <label>
@@ -338,26 +340,25 @@
                 <input name="hourly" type="number" min="0" step="0.01" placeholder="Ex.: 32,00">
               </label>
               <label>
-                <span>Quantidade de referência <small>un.</small></span>
+                <span>Quantidade do lote <small>un.</small></span>
                 <input name="quantity" type="number" min="1" value="100">
               </label>
             </div>
             <div class="builder-actions">
-              <a class="text-arrow" href="capacidade.html">Calcular meu valor-hora primeiro ↗</a>
-              <button type="button" class="button button-dark" data-export-briefing>Gerar orçamento</button>
+              <a class="text-arrow" href="capacidade.html">Calcular valor-hora ↗</a>
+              <button type="button" class="button button-dark" data-generate-document>Montar orçamento</button>
             </div>
           </section>
 
           <section class="quote-builder" data-mode-panel="buyer" hidden>
             <div class="form-heading">
               <span class="mono">01</span>
-              <h3>O que você precisa produzir?</h3>
+              <h3>Defina a demanda</h3>
             </div>
             <p class="form-note">
-              Quem contrata não precisa conhecer a tarifa-hora de uma prestadora.
-              Informe artigo, lote e, se desejar, o teto que pretende pagar por
-              unidade. A base técnica mostra o tempo de referência e calcula a
-              hora implícita desse teto.
+              Informe o lote e, se quiser, o teto que pretende pagar por unidade.
+              A base técnica transforma os itens selecionados em uma referência de
+              tempo e custo para o romaneio.
             </p>
             <div class="builder-fields">
               <label>
@@ -371,39 +372,71 @@
             </div>
             <div class="buyer-result" data-buyer-result hidden>
               <div><span>Tempo de referência</span><strong data-reference-minutes>0 min./un.</strong></div>
-              <div><span>Hora implícita do seu teto</span><strong data-implied-hourly>R$ 0,00</strong></div>
+              <div><span>Hora implícita do teto</span><strong data-implied-hourly>R$ 0,00</strong></div>
               <div><span>Tempo total estimado</span><strong data-reference-total-hours>0h</strong></div>
             </div>
             <div class="builder-actions">
-              <span class="form-note-inline">Selecione pelo menos um artigo abaixo.</span>
-              <button type="button" class="button button-dark" data-export-briefing>Gerar romaneio de referência</button>
+              <span class="form-note-inline">Selecione os itens na base técnica.</span>
+              <button type="button" class="button button-dark" data-generate-document>Montar romaneio</button>
             </div>
           </section>
 
           <aside class="quote-summary">
-            <div class="panel-label">FEITURA / SELEÇÃO</div>
-            <strong data-catalog-total>R$ 0,00</strong>
-            <div class="panel-data">
-              <span><b data-catalog-count>0 itens selecionados</b>base</span>
-              <span><b data-catalog-hours>0h</b>tempo estimado</span>
-              <span><b>local</b>sem cadastro</span>
+            <div>
+              <div class="panel-label">ORÇAMENTO ATUAL</div>
+              <strong data-catalog-total>R$ 0,00</strong>
+              <div class="panel-data">
+                <span><b data-catalog-count>0 itens</b>base</span>
+                <span><b data-catalog-hours>0h</b>tempo</span>
+              </div>
             </div>
             <p>
-              O cálculo é executado no navegador. Nesta versão, os dados não são
-              enviados nem armazenados remotamente.
+              A base técnica é carregada localmente pelo navegador. A seleção alimenta
+              o orçamento; linhas manuais entram apenas nesta cotação e podem ser exportadas.
             </p>
             <div class="summary-actions">
-              <button type="button" class="button button-paper" data-export-catalog>Exportar catálogo</button>
-              <button type="button" class="text-button" data-print-catalog>Imprimir / salvar PDF</button>
+              <button type="button" class="button button-paper" data-print-catalog>Ver / imprimir documento</button>
+              <button type="button" class="text-button" data-export-catalog>Baixar CSV</button>
+              <button type="button" class="text-button" data-export-json>Baixar JSON</button>
+              <button type="button" class="text-button" data-export-html>Baixar documento HTML</button>
             </div>
           </aside>
 
         </div>
 
+        <section class="quote-document" aria-labelledby="quote-document-title">
+          <div class="quote-document-head">
+            <div>
+              <div class="section-index mono">02 / DOCUMENTO</div>
+              <p class="kicker">Resultado da seleção</p>
+              <h2 id="quote-document-title">Orçamento / romaneio</h2>
+            </div>
+            <p>O documento abaixo é montado em tempo real a partir da base técnica e das linhas adicionadas à cotação.</p>
+          </div>
+          <div class="quote-document-table-wrap">
+            <table class="quote-document-table">
+              <thead><tr><th>Item / serviço</th><th>Tempo</th><th>Valor unit.</th><th>Total</th><th></th></tr></thead>
+              <tbody data-catalog-table><tr><td colspan="5" class="empty-state">Selecione itens na base técnica para montar o orçamento.</td></tr></tbody>
+            </table>
+          </div>
+          <div class="custom-line">
+            <div class="custom-line-head">
+              <div><span class="kicker">Nova linha</span><strong>Adicionar serviço ou item próprio</strong></div>
+              <span class="mono">NÃO ALTERA A BASE PÚBLICA</span>
+            </div>
+            <div class="custom-line-fields">
+              <label><span>Descrição</span><input data-custom-name type="text" placeholder="Ex.: Aplicação de etiqueta"></label>
+              <label><span>Tempo / unidade <small>min.</small></span><input data-custom-minutes type="number" min="0" step="0.01" placeholder="Ex.: 2,5"></label>
+              <label><span>Valor unitário <small>R$</small></span><input data-custom-price type="number" min="0" step="0.01" placeholder="Opcional"></label>
+              <button type="button" class="button button-dark" data-add-custom-line>Adicionar à cotação</button>
+            </div>
+          </div>
+        </section>
+
         <section class="formula-workspace" aria-labelledby="formula-title">
           <div class="formula-heading">
             <div>
-              <div class="section-index mono">03 / FUNÇÃO DO VALOR</div>
+              <div class="section-index mono">04 / FUNÇÃO DO VALOR</div>
               <p class="kicker">Manifesto justo do valor</p>
               <h2 id="formula-title">O orçamento pode apresentar a própria regra.</h2>
             </div>
@@ -432,19 +465,24 @@
 
     </section>
 
-    <section class="section-paper glossary-section" id="glossario">
+    <section class="section-paper glossary-section" id="base-tecnica">
       <div class="shell">
         <div class="glossary-heading">
           <div>
-            <div class="section-index mono">02 / GLOSSÁRIO PÚBLICO</div>
-            <p class="kicker">Base técnica FEITURA</p>
-            <h2>Consulte o que existe dentro de um produto.</h2>
+            <div class="section-index mono">03 / BANCO DE DADOS TÉCNICO</div>
+            <p class="kicker">Glossário público FEITURA</p>
+            <h2>Acesse a base que alimenta a cotação.</h2>
           </div>
           <p>
-            A base pública reúne artigos e modelos, operações de construção,
-            serviços de conserto, método de cronoanálise e fontes de referência.
-            Cada registro mantém sua natureza de dado e sua limitação.
+            Este banco de dados reúne artigos, operações e serviços técnicos usados pela
+            cotação. Selecione um registro para levá-lo ao documento, personalize o tempo
+            ou o valor quando necessário e mantenha a referência original da base visível.
           </p>
+        </div>
+        <div class="quote-database-note">
+          <span class="mono">BANCO FEITURA</span>
+          <strong data-base-count>0 registros</strong>
+          <small data-base-status>base local → seleção → personalização → orçamento</small>
         </div>
 
         <div class="glossary-toolbar">
@@ -464,7 +502,7 @@
             </select>
           </label>
           <div class="glossary-tools">
-            <button type="button" class="text-button" data-select-all>Selecionar base</button>
+            <button type="button" class="text-button" data-select-all>Selecionar registros exibidos</button>
             <button type="button" class="text-button" data-clear-selection>Limpar seleção</button>
           </div>
         </div>

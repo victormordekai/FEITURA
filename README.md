@@ -80,3 +80,9 @@ A entrega final inclui o glossário público integrado à cotação, o motor de 
 ## Correção responsiva — 24/10/2026
 
 A revisão final de Gate 1 corrige a aplicação do atributo HTML `hidden` sobre componentes com `display:flex/grid` e padroniza o menu responsivo das páginas internas. O detalhe técnico está documentado em `docs/GATE_1_RESPONSIVE_FIX_2026-10-24.md`.
+
+## Cotação e base técnica — Gate 1
+
+A arquitetura atual da cotação está documentada em `docs/ARCHITECTURE_GATE1_QUOTATION.md`.
+
+A base técnica pública está em `js/modules/glossary-data.js`. `pages/cotar.html` apresenta a interface; `js/modules/glossary.js` carrega os registros, calcula os valores e monta o documento de orçamento/romaneio no navegador. Linhas próprias adicionadas pelo usuário permanecem somente na cotação atual e não alteram a base pública.

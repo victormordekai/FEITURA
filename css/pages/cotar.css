@@ -35,3 +35,45 @@
 .glossary-reference{background:var(--white);padding:28px}.glossary-reference .mono{font-size:.58rem;color:var(--muted)}.glossary-reference h3{margin:10px 0;font-size:1.05rem}.glossary-reference p{margin:0 0 18px;max-width:70ch;font-size:.78rem;line-height:1.7;color:var(--muted)}.glossary-reference a{font:600 .62rem "DM Mono",monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--olive-dark)}
 .formula-workspace{margin-top:1px;background:var(--paper-deep);padding:clamp(50px,7vw,100px) clamp(24px,4vw,54px)}.formula-heading{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);gap:clamp(35px,7vw,100px);align-items:end;margin-bottom:40px}.formula-heading h2{margin-top:10px;font:400 clamp(2rem,4vw,4rem) "Libre Baskerville",serif;line-height:1;letter-spacing:-.05em}.formula-heading>p{font-size:.84rem;line-height:1.75;color:var(--muted)}.formula-heading strong{color:var(--olive-dark)}.formula-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:1px;background:var(--line);border:1px solid var(--line)}.formula-fields{display:grid;grid-template-columns:1fr 1fr;background:var(--white);gap:1px}.formula-fields label{display:flex;flex-direction:column;gap:9px;padding:18px;background:var(--paper)}.formula-fields label span{font:600 .62rem "DM Mono",monospace;text-transform:uppercase;letter-spacing:.08em}.formula-fields input,.formula-fields select{height:46px;border:1px solid var(--line);background:var(--white);padding:0 10px;font:400 .86rem "DM Mono",monospace;color:var(--ink)}.formula-result{background:var(--olive-dark);color:var(--white);padding:clamp(30px,4vw,54px);display:flex;flex-direction:column;justify-content:center}.formula-result>.mono{font-size:.62rem;color:rgba(251,250,246,.55)}.formula-result>strong{display:block;margin:18px 0 24px;font:400 clamp(2rem,4vw,3.8rem) "Libre Baskerville",serif;line-height:1.02}.formula-display{padding:15px 0;border-top:1px solid var(--line-light);border-bottom:1px solid var(--line-light);font:400 .78rem "DM Mono",monospace;line-height:1.6;overflow-wrap:anywhere}.formula-result p{font-size:.73rem;line-height:1.7;color:rgba(251,250,246,.62);margin:18px 0}.formula-result a{font:600 .64rem "DM Mono",monospace;text-transform:uppercase;letter-spacing:.07em;color:var(--white)}
 @media(max-width:900px){.formula-heading,.formula-grid{grid-template-columns:1fr}}@media(max-width:600px){.formula-fields{grid-template-columns:1fr}.formula-workspace{padding-left:18px;padding-right:18px}}
+
+/* Gate 1.2: documento de orçamento e linhas próprias */
+.quote-document{margin-top:1px;background:var(--paper);border:1px solid var(--line);padding:clamp(34px,5vw,64px)}
+.quote-document-head{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);gap:clamp(30px,7vw,100px);align-items:end;margin-bottom:30px}
+.quote-document-head h2{margin-top:10px;font:400 clamp(2rem,3.8vw,3.6rem) "Libre Baskerville",serif;line-height:1;letter-spacing:-.045em}
+.quote-document-head>p{margin:0;max-width:48ch;font-size:.82rem;line-height:1.75;color:var(--muted)}
+.quote-document-table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--white)}
+.quote-document-table{width:100%;min-width:680px;border-collapse:collapse;font-size:.76rem}
+.quote-document-table th,.quote-document-table td{padding:15px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.quote-document-table th{background:var(--paper-deep);font:600 .61rem "DM Mono",monospace;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.quote-document-table td strong{display:block;font-weight:600}.quote-document-table td small{display:block;margin-top:4px;font:400 .61rem "DM Mono",monospace;color:var(--muted)}
+.quote-document-table td:nth-child(2),.quote-document-table td:nth-child(3),.quote-document-table td:nth-child(4){white-space:nowrap;font-family:"DM Mono",monospace}
+.quote-row-remove{border:0;background:none;padding:4px 0;color:var(--muted);font:600 .6rem "DM Mono",monospace;text-transform:uppercase;cursor:pointer}.quote-row-remove:hover{color:var(--ink)}
+.custom-line{margin-top:1px;padding:26px;background:var(--paper-deep);border-top:1px solid var(--line)}
+.custom-line-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:18px}.custom-line-head strong{display:block;margin-top:5px;font:400 1.25rem "Libre Baskerville",serif}.custom-line-head>.mono{font-size:.58rem;color:var(--muted);white-space:nowrap}
+.custom-line-fields{display:grid;grid-template-columns:minmax(220px,1.6fr) minmax(140px,.7fr) minmax(140px,.7fr) auto;gap:1px;background:var(--line);border:1px solid var(--line)}
+.custom-line-fields label{display:flex;flex-direction:column;gap:8px;padding:14px;background:var(--white)}.custom-line-fields label span{font:600 .61rem "DM Mono",monospace;text-transform:uppercase;letter-spacing:.07em}.custom-line-fields small{font-weight:400;opacity:.55}
+.custom-line-fields input{height:44px;border:1px solid var(--line);background:var(--paper);padding:0 10px;color:var(--ink);font:400 .82rem "DM Mono",monospace}
+.custom-line-fields .button{border:0;margin:0;min-height:100%;white-space:normal}
+.quote-summary .button{cursor:pointer}
+@media(max-width:900px){.quote-document-head{grid-template-columns:1fr}.custom-line-fields{grid-template-columns:1fr 1fr}.custom-line-fields .button{min-height:52px}.custom-line-fields label:first-child{grid-column:1/-1}}
+@media(max-width:600px){.quote-document{padding:24px 18px}.quote-document-head{gap:22px}.custom-line{padding:20px 0 0;background:transparent;border-top:0}.custom-line-head{display:block}.custom-line-head>.mono{display:block;margin-top:10px}.custom-line-fields{grid-template-columns:1fr}.custom-line-fields label:first-child{grid-column:auto}.custom-line-fields .button{min-height:50px}.quote-document-table{min-width:620px}}
+
+.quote-database-note{display:grid;grid-template-columns:auto auto 1fr;gap:18px;align-items:baseline;margin-top:28px;padding:15px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.quote-database-note .mono{font-size:.58rem;color:var(--muted)}.quote-database-note strong{font:400 1rem "Libre Baskerville",serif}.quote-database-note small{font-size:.7rem;color:var(--muted);text-align:right}
+@media(max-width:600px){.quote-database-note{grid-template-columns:1fr 1fr;gap:8px}.quote-database-note small{grid-column:1/-1;text-align:left}}
+
+/* Integração banco de dados → cotação */
+.quote-intro-actions{display:flex;flex-direction:column;align-items:flex-start;gap:24px;max-width:52ch}
+.quote-intro-actions p{margin:0}
+.quote-intro-actions .button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.quote-summary .summary-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.quote-summary .summary-actions .text-button{padding:4px 0}
+.glossary-item.is-selected{outline:2px solid var(--olive);outline-offset:-2px}
+.glossary-personalize{display:grid;grid-template-columns:minmax(150px,1fr) minmax(170px,1fr) auto;gap:8px;align-items:end;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.glossary-personalize label{display:flex;flex-direction:column;gap:7px}
+.glossary-personalize label span{font:600 .58rem "DM Mono",monospace;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.glossary-personalize label small{font-weight:400;opacity:.55}
+.glossary-personalize input{height:40px;width:100%;border:1px solid var(--line);background:var(--paper);padding:0 9px;font:400 .76rem "DM Mono",monospace;color:var(--ink)}
+.glossary-personalize .text-button{padding:0 0 9px;white-space:nowrap}
+@media(max-width:900px){.glossary-personalize{grid-template-columns:1fr 1fr}.glossary-personalize .text-button{justify-self:start}}
+@media(max-width:600px){.quote-intro-actions{max-width:none}.quote-intro-actions .button{width:100%}.quote-summary .summary-actions{align-items:stretch;flex-direction:column}.quote-summary .summary-actions>*{width:100%;text-align:left}.glossary-personalize{grid-template-columns:1fr}.glossary-personalize .text-button{padding-bottom:0}}
