@@ -8,11 +8,10 @@ const isoNow = () => new Date().toISOString();
 const localDateTime = date => new Intl.DateTimeFormat("pt-BR", { dateStyle:"short", timeStyle:"medium" }).format(date);
 
 const records = () => [
-  ...glossaryData.models.map(item => ({ ...item, key:`model:${item.name}`, label:item.name, group:"models", groupLabel:"Artigos e modelos", category:item.material_family || "Artigo", quoteable:true })),
-  ...glossaryData.operations.map(item => ({ ...item, key:`operation:${item.id}`, label:item.name, group:"operations", groupLabel:"Operações", category:item.category || "Operação", quoteable:true })),
-  ...glossaryData.repairs.filter(item => item.active !== false).map(item => ({ ...item, key:`repair:${item.id}`, label:item.name, group:"repairs", groupLabel:"Consertos e serviços", category:"Conserto", quoteable:true })),
-  ...glossaryData.methods.map((item,index) => ({ ...item, key:`method:${index}`, label:item.term, group:"methods", groupLabel:"Método de cronoanálise", category:"Método", quoteable:false })),
-  ...glossaryData.specialReferences.map(item => ({ ...item, key:`special:${item.id}`, label:item.name, group:"specialRefs", groupLabel:"Referências especiais", category:item.category || "Produto especial", quoteable:false, specialReference:true }))
+  ...glossaryData.models.map(item => ({ ...item, key:`model:${item.name}`, label:item.name, group:"models", groupLabel:"Artigos e modelos", category:item.material_family || "Artigo", quoteable:true, referenceType:"direct", referenceTypeLabel:"REFERÊNCIA DIRETA" })),
+  ...glossaryData.operations.map(item => ({ ...item, key:`operation:${item.id}`, label:item.name, group:"operations", groupLabel:"Operações", category:item.category || "Operação", quoteable:true, referenceType:"direct", referenceTypeLabel:"REFERÊNCIA DIRETA" })),
+  ...glossaryData.repairs.filter(item => item.active !== false).map(item => ({ ...item, key:`repair:${item.id}`, label:item.name, group:"repairs", groupLabel:"Consertos e serviços", category:"Conserto", quoteable:true, referenceType:"direct", referenceTypeLabel:"REFERÊNCIA DIRETA" })),
+  ...glossaryData.methods.map((item,index) => ({ ...item, key:`method:${index}`, label:item.term, group:"methods", groupLabel:"Método de cronoanálise", category:"Método", quoteable:false, methodReference:true, referenceType:"method", referenceTypeLabel:"REFERÊNCIA METODOLÓGICA" }))
 ];
 
 const referenceRecords = () => glossaryData.sources.map((item,index) => ({ ...item, key:`source:${index}` }));
@@ -65,40 +64,24 @@ function pricingText(item,state){
   return calculated > 0 ? money(calculated) : "DEFINA O VALOR/HORA";
 }
 
-function specialReferenceRecords(){ return (glossaryData.specialReferences || []).map(item => ({ ...item, key:`special:${item.id}`, label:item.name, group:"specialRefs", groupLabel:"Referências especiais", category:item.category || "Produto especial", quoteable:false, specialReference:true })); }
-
-function renderSpecialReference(item){
-  return `<article class="glossary-item is-reference special-reference" data-glossary-item data-key="${esc(item.key)}">
-    <span class="glossary-reference-mark mono">REF.</span>
-    <div class="glossary-item-main">
-      <div class="glossary-item-top"><span class="mono">${esc(item.groupLabel)}</span><span class="glossary-category">${esc(item.category || "")}</span></div>
-      <h3>${esc(item.label)}</h3>
-      <p>${esc(item.notes || "Referência especial para estruturar produtos fora do conjunto principal da base.")}</p>
-      <div class="glossary-meta"><span><b>${item.variables.length}</b> VARIÁVEIS ESPECÍFICAS</span><span><b>CONFIGURÁVEL</b> PARA COTAÇÃO</span></div>
-    </div>
-    <button type="button" class="glossary-detail" data-special-ref="${esc(item.id)}" aria-haspopup="dialog">CONFIGURAR REF.</button>
-  </article>`;
-}
-
 function renderRecord(item,state){
   const selected = state.selected.has(item.key);
   const mins = minutesFor(item);
   const standard = standardPriceFor(item);
   return `<article class="glossary-item${selected ? " is-selected" : ""}${item.quoteable ? "" : " is-reference"}" data-glossary-item data-key="${esc(item.key)}">
-    ${item.quoteable ? `<label class="glossary-select" aria-label="Selecionar ${esc(item.label)} para a tabela de custos"><input type="checkbox" data-glossary-check ${selected ? "checked" : ""}><span aria-hidden="true"></span></label>` : `<span class="glossary-reference-mark mono">REF.</span>`}
+    ${item.quoteable ? `<label class="glossary-select" aria-label="Selecionar ${esc(item.label)} para a tabela de custos"><input type="checkbox" data-glossary-check ${selected ? "checked" : ""}><span aria-hidden="true"></span></label>` : `<span class="glossary-reference-mark mono">MÉTODO</span>`}
     <div class="glossary-item-main">
-      <div class="glossary-item-top"><span class="mono">${esc(item.groupLabel)}</span><span class="glossary-category">${esc(item.category || "")}</span></div>
+      <div class="glossary-item-top"><span class="mono">${esc(item.referenceTypeLabel || item.groupLabel)}</span><span class="glossary-category">${esc(item.category || "")}</span></div>
       <h3>${esc(item.label)}</h3>
       <p>${esc(item.notes || item.scope || item.rule || item.limitation || "")}</p>
-      ${item.quoteable ? `<div class="glossary-meta"><span><b>${number(mins)}</b> MIN. MÉDIO</span><span><b>${standard > 0 ? money(standard) : "SEM VALOR"}</b> PADRÃO</span><span><b>${pricingText(item,state)}</b> COTAÇÃO</span></div>` : `<div class="glossary-meta"><span><b>${esc(item.category || item.type || "REFERÊNCIA")}</b></span></div>`}
+      ${item.quoteable ? `<div class="glossary-meta"><span><b>${number(mins)}</b> MIN. MÉDIO</span><span><b>${standard > 0 ? money(standard) : "SEM VALOR"}</b> PADRÃO</span><span><b>${pricingText(item,state)}</b> COTAÇÃO</span></div>` : `<div class="glossary-meta"><span><b>${esc(item.category || "MÉTODO")}</b></span><span><b>CONFIGURÁVEL</b> PARA COTAÇÃO</span></div>`}
     </div>
-    <button type="button" class="glossary-detail" data-glossary-detail aria-expanded="false">DETALHES</button>
+    <button type="button" class="glossary-detail ${item.methodReference ? "method-configure" : ""}" data-glossary-detail ${item.methodReference ? `data-method-ref="${esc(item.key)}" aria-haspopup="dialog"` : `aria-expanded="false"`}>${item.methodReference ? "CONFIGURAR MÉTODO" : "DETALHES"}</button>
     <div class="glossary-detail-panel" hidden>
       ${item.type === "model" ? `<p><strong>ESCOPO:</strong> ${esc(item.scope)}</p><p><strong>OPERAÇÕES ESTIMADAS:</strong> ${esc(item.operations)}</p>` : ""}
       ${item.type === "operation" ? `<p><strong>SEQUÊNCIA:</strong> ${esc(item.sequence)}</p><p><strong>MÁQUINAS:</strong> ${esc(item.machines)}</p><p><strong>BASE:</strong> ${esc(item.basis)}</p>` : ""}
       ${item.type === "repair" ? `<p><strong>FAIXA:</strong> ${money(item.price_min)} A ${money(item.price_max)}</p><p><strong>BASE:</strong> ${esc(item.basis)}</p><p><strong>CONFIANÇA:</strong> ${esc(item.confidence)}</p>` : ""}
-      ${item.type === undefined && item.rule ? `<p><strong>REGRA:</strong> ${esc(item.rule)}</p>` : ""}
-      ${item.type === undefined && item.url ? `<p><strong>TIPO:</strong> ${esc(item.type || "FONTE")}</p><p><strong>LIMITAÇÃO:</strong> ${esc(item.limitation)}</p>` : ""}
+      ${item.methodReference ? `<p><strong>REGRA:</strong> ${esc(item.rule)}</p>` : ""}
     </div>
   </article>`;
 }
@@ -141,65 +124,148 @@ function renderGlossary(root,state){
   const list = root.querySelector("[data-glossary-list]");
   if(!list) return;
   const visible = filteredRecords(root);
-  list.innerHTML = visible.length ? visible.map(item => item.specialReference ? renderSpecialReference(item) : renderRecord(item,state)).join("") : `<div class="empty-state">NENHUM REGISTRO ENCONTRADO.</div>`;
-  root.querySelector("[data-base-count]")?.replaceChildren(document.createTextNode(`${records().length} REGISTROS + ${specialReferenceRecords().length} REFS.`));
+  list.innerHTML = visible.length ? visible.map(item => renderRecord(item,state)).join("") : `<div class="empty-state">NENHUM REGISTRO ENCONTRADO.</div>`;
+  root.querySelector("[data-base-count]")?.replaceChildren(document.createTextNode(`${records().length} REGISTROS`));
   renderReferences(root);
 }
 
-function renderSpecialReferenceModal(root){
-  let modal=root.querySelector("[data-special-ref-modal]");
+const METHOD_SCHEMAS = {
+  "Perímetro de costura": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Ex.: Mochila urbana"},
+    {key:"perimeter",label:"Perímetro de costura",unit:"CM",type:"number",step:"0.01"},
+    {key:"speed",label:"Velocidade efetiva",unit:"CM/MIN.",type:"number",step:"0.01"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ],
+  "Tempo de máquina estimado": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Ex.: Banco automotivo"},
+    {key:"machineTime",label:"Tempo de máquina estimado",unit:"MIN./UN.",type:"number",step:"0.01"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ],
+  "Aproximação por pontos": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+    {key:"length",label:"Comprimento de costura",unit:"CM",type:"number",step:"0.01"},
+    {key:"pointsPerCm",label:"Pontos por cm",unit:"PONTOS/CM",type:"number",step:"0.01"},
+    {key:"pointsPerMin",label:"Pontos por minuto",unit:"PONTOS/MIN.",type:"number",step:"0.01"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ],
+  "Tempo normal": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+    {key:"cycleAverage",label:"Média dos ciclos observados",unit:"MIN./UN.",type:"number",step:"0.01"},
+    {key:"paceFactor",label:"Fator de ritmo",unit:"FATOR",type:"number",step:"0.001",placeholder:"Ex.: 1,00"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ],
+  "Tempo padrão": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+    {key:"normalTime",label:"Tempo normal",unit:"MIN./UN.",type:"number",step:"0.01"},
+    {key:"tolerance",label:"Tolerância",unit:"%",type:"number",step:"0.01"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ],
+  "Tempo por unidade em lote": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+    {key:"variableTime",label:"Tempo variável por peça",unit:"MIN./UN.",type:"number",step:"0.01"},
+    {key:"setupTime",label:"Setup do lote",unit:"MIN.",type:"number",step:"0.01"},
+    {key:"lotSize",label:"Quantidade do lote de referência",unit:"UN.",type:"number",step:"1"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ],
+  "Preço estimado de facção": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+    {key:"standardTime",label:"Tempo padrão",unit:"MIN./UN.",type:"number",step:"0.01"},
+    {key:"tariff",label:"Tarifa efetiva",unit:"R$/MIN.",type:"number",step:"0.0001"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ],
+  "Validação de cronoanálise": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+    {key:"cycles",label:"Quantidade de ciclos observados",unit:"CICLOS",type:"number",step:"1"},
+    {key:"referenceTime",label:"Tempo de referência",unit:"MIN./UN.",type:"number",step:"0.01"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ],
+  "Unidade e escopo": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+    {key:"unit",label:"Unidade de escopo",type:"text",placeholder:"Ex.: unidade, par, metro linear"},
+    {key:"referenceTime",label:"Tempo de referência",unit:"MIN./UNIDADE",type:"number",step:"0.01"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade",unit:"UNIDADES",type:"number",step:"1",value:"1"}
+  ],
+  "Limite desta versão": [
+    {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+    {key:"referenceTime",label:"Tempo de referência",unit:"MIN./UN.",type:"number",step:"0.01"},
+    {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+    {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+    {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+  ]
+};
+
+function methodSchema(item){ return METHOD_SCHEMAS[item.term] || [
+  {key:"product",label:"Nome do produto",type:"text",placeholder:"Nome do produto"},
+  {key:"referenceTime",label:"Tempo de referência",unit:"MIN./UN.",type:"number",step:"0.01"},
+  {key:"processes",label:"Quantidade de processos",unit:"PROCESSOS",type:"number",step:"1"},
+  {key:"machines",label:"Quantidade de máquinas",unit:"MÁQUINAS",type:"number",step:"1"},
+  {key:"quantity",label:"Quantidade do lote",unit:"UN.",type:"number",step:"1",value:"1"}
+]; }
+
+function calculateMethodMinutes(term,v){
+  const n=k=>Math.max(0,Number(v[k])||0);
+  if(term==="Perímetro de costura" && n("perimeter")>0 && n("speed")>0) return n("perimeter")/n("speed");
+  if(term==="Tempo de máquina estimado") return n("machineTime");
+  if(term==="Aproximação por pontos" && n("length")>0 && n("pointsPerCm")>0 && n("pointsPerMin")>0) return (n("length")*n("pointsPerCm"))/n("pointsPerMin");
+  if(term==="Tempo normal" && n("cycleAverage")>0) return n("cycleAverage")*(n("paceFactor")||1);
+  if(term==="Tempo padrão" && n("normalTime")>0) return n("normalTime")*(1+n("tolerance")/100);
+  if(term==="Tempo por unidade em lote" && n("variableTime")>0 && n("lotSize")>0) return n("variableTime")+(n("setupTime")/n("lotSize"));
+  if(term==="Preço estimado de facção") return n("standardTime");
+  return n("referenceTime");
+}
+
+function calculateMethodPrice(term,v,minutes,state){
+  if(term==="Preço estimado de facção" && Number(v.tariff)>0 && minutes>0) return minutes*Number(v.tariff);
+  return state.hourly>0 && minutes>0 ? minutes/60*state.hourly : 0;
+}
+
+function renderMethodModal(root){
+  let modal=root.querySelector("[data-method-ref-modal]");
   if(modal) return modal;
-  modal=document.createElement("div");
-  modal.className="special-ref-modal";
-  modal.dataset.specialRefModal="";
-  modal.hidden=true;
-  modal.innerHTML=`<div class="special-ref-backdrop" data-special-ref-close></div><section class="special-ref-dialog" role="dialog" aria-modal="true" aria-labelledby="special-ref-title"><button type="button" class="special-ref-close" data-special-ref-close aria-label="Fechar">FECHAR</button><div class="section-index mono">REF. / CONFIGURAÇÃO ESPECIAL</div><p class="kicker">Produto fora da base principal</p><h2 id="special-ref-title" data-special-ref-title>Referência especial</h2><p class="special-ref-description" data-special-ref-description></p><form class="special-ref-form" data-special-ref-form></form><div class="special-ref-actions"><button type="button" class="button button-dark" data-special-ref-add>ADICIONAR À COTAÇÃO</button><button type="button" class="text-button" data-special-ref-close>CANCELAR</button></div></section>`;
-  root.appendChild(modal);
-  return modal;
+  modal=document.createElement("div"); modal.className="method-ref-modal"; modal.dataset.methodRefModal=""; modal.hidden=true;
+  modal.innerHTML=`<div class="method-ref-backdrop" data-method-ref-close></div><section class="method-ref-dialog" role="dialog" aria-modal="true" aria-labelledby="method-ref-title"><button type="button" class="method-ref-close" data-method-ref-close>FECHAR</button><div class="section-index mono">MÉTODO / CONFIGURAÇÃO DE COTAÇÃO</div><p class="kicker">Método de cronoanálise</p><h2 id="method-ref-title" data-method-ref-title>Método</h2><p class="method-ref-description" data-method-ref-description></p><form class="method-ref-form" data-method-ref-form></form><div class="method-ref-actions"><button type="button" class="button button-dark" data-method-ref-add>ADICIONAR AO ROMANEIO</button><button type="button" class="text-button" data-method-ref-close>CANCELAR</button></div></section>`;
+  root.appendChild(modal); return modal;
 }
 
-function openSpecialReference(root,state,id){
-  const item=specialReferenceRecords().find(ref=>ref.id===id);
-  if(!item) return;
-  const modal=renderSpecialReferenceModal(root);
-  modal._reference=item;
-  const title=modal.querySelector("[data-special-ref-title]");
-  const description=modal.querySelector("[data-special-ref-description]");
-  const form=modal.querySelector("[data-special-ref-form]");
-  title.textContent=item.name;
-  description.textContent=`${item.notes} As variáveis abaixo entram na identificação da REF. no romaneio. O tempo e o valor permanecem campos de cotação, não estimativas universais.`;
-  form.innerHTML=`${item.variables.map(variable=>{
-    if(variable.type==="select") return `<label><span>${esc(variable.label)}</span><select name="${esc(variable.key)}"><option value="">Não definido</option>${variable.options.map(option=>`<option value="${esc(option)}">${esc(option)}</option>`).join("")}</select></label>`;
-    return `<label><span>${esc(variable.label)}${variable.unit ? ` <small>${esc(variable.unit)}</small>` : ""}</span><input name="${esc(variable.key)}" type="${variable.type === "number" ? "number" : "text"}" ${variable.type === "number" ? 'min="0" step="0.01"' : ''} placeholder="${esc(variable.placeholder || "")}"></label>`;
-  }).join("")}<div class="special-ref-quote-fields"><label><span>Tempo técnico de referência <small>MIN./UN.</small></span><input name="__minutes" type="number" min="0" step="0.01" placeholder="Informe se houver referência"></label><label><span>Valor unitário próprio <small>R$</small></span><input name="__price" type="number" min="0" step="0.01" placeholder="Opcional"></label><label><span>Quantidade <small>UN.</small></span><input name="__quantity" type="number" min="1" step="1" value="1"></label></div>`;
-  modal.hidden=false;
-  requestAnimationFrame(()=>modal.classList.add("is-open"));
-  form.querySelector("input,select")?.focus();
+function openMethodReference(root,state,key){
+  const item=records().find(r=>r.key===key && r.methodReference); if(!item) return;
+  const modal=renderMethodModal(root); modal._method=item;
+  modal.querySelector("[data-method-ref-title]").textContent=item.term;
+  modal.querySelector("[data-method-ref-description]").textContent=`${item.rule} Informe somente as variáveis necessárias para esta referência. Processos e máquinas identificam a estrutura produtiva do cálculo; não são convertidos automaticamente em tempo.`;
+  const form=modal.querySelector("[data-method-ref-form]"), schema=methodSchema(item);
+  form.innerHTML=schema.map(f=>`<label><span>${esc(f.label)}${f.unit?` <small>${esc(f.unit)}</small>`:""}</span><input name="${esc(f.key)}" type="${f.type}" ${f.min!==undefined?`min="${f.min}"`:f.type==="number"?'min="0"':''} ${f.step?`step="${f.step}"`:f.type==="number"?'step="0.01"':''} ${f.value!==undefined?`value="${esc(f.value)}"`:''} placeholder="${esc(f.placeholder||"")}"></label>`).join("")+`<div class="method-ref-derived"><span class="mono">TEMPO RESULTANTE</span><strong data-method-ref-minutes>INFORME AS VARIÁVEIS</strong><small data-method-ref-derived-note>O tempo é derivado apenas quando a regra possui parâmetros suficientes; caso contrário, permaneça como referência informada.</small></div>`;
+  const update=()=>{const v={};schema.forEach(f=>v[f.key]=form.elements[f.key]?.value||"");const mins=calculateMethodMinutes(item.term,v);modal._values=v;modal._minutes=mins;modal.querySelector("[data-method-ref-minutes]").textContent=mins>0?`${number(mins)} MIN./UN.`:"INFORME AS VARIÁVEIS";};
+  form.oninput=update; update(); modal.hidden=false; requestAnimationFrame(()=>modal.classList.add("is-open")); form.querySelector("input")?.focus();
 }
 
-function closeSpecialReference(root){
-  const modal=root.querySelector("[data-special-ref-modal]");
-  if(!modal) return;
-  modal.classList.remove("is-open");
-  setTimeout(()=>{modal.hidden=true;},180);
-}
+function closeMethodReference(root){const modal=root.querySelector("[data-method-ref-modal]");if(!modal)return;modal.classList.remove("is-open");setTimeout(()=>{modal.hidden=true;},180);}
 
-function addSpecialReference(root,state){
-  const modal=root.querySelector("[data-special-ref-modal]");
-  const item=modal?._reference;
-  const form=modal?.querySelector("[data-special-ref-form]");
-  if(!item || !form) return;
-  const values={};
-  item.variables.forEach(variable=>{ values[variable.key]=form.elements[variable.key]?.value?.trim() || ""; });
-  const minutes=Math.max(0,Number(form.elements.__minutes?.value)||0);
-  const price=Math.max(0,Number(form.elements.__price?.value)||0);
-  const quantity=Math.max(1,Number(form.elements.__quantity?.value)||1);
-  const summary=item.variables.map(variable=>values[variable.key] ? `${variable.label}: ${values[variable.key]}${variable.unit ? ` ${variable.unit}` : ""}` : "").filter(Boolean).join(" · ");
-  const name=`REF. ${item.name}${summary ? ` | ${summary}` : ""}`;
-  state.customRows.push({name,minutes,price,quantity,referenceId:item.id,referenceName:item.name,variables:values});
-  closeSpecialReference(root);
-  renderResults(root,state);
-  root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});
+function addMethodReference(root,state){
+  const modal=root.querySelector("[data-method-ref-modal]"), item=modal?._method, values=modal?._values||{}, minutes=Number(modal?._minutes)||0;
+  if(!item)return;
+  const schema=methodSchema(item); const product=values.product?.trim() || "Produto não informado"; const quantity=Math.max(1,Number(values.quantity)||1); const price=calculateMethodPrice(item.term,values,minutes,state);
+  const summary=schema.filter(f=>!['product','quantity'].includes(f.key)).map(f=>values[f.key] ? `${f.label}: ${values[f.key]}${f.unit?` ${f.unit}`:""}` : "").filter(Boolean).join(" · ");
+  const name=`${product} | ${item.term}${summary?` | ${summary}`:""}`;
+  state.customRows.push({name,minutes,price,quantity,methodReference:true,referenceId:`method:${item.term}`,referenceName:item.term,variables:values});
+  closeMethodReference(root); renderResults(root,state); root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function selectedItems(state){ return quoteableRecords().filter(item => state.selected.has(item.key)); }
@@ -221,16 +287,38 @@ function calculate(state){
       unitPrice = custom > 0 ? custom : calculatedUnitPrice;
       basis = custom > 0 ? "VALOR/HORA · AJUSTADO" : (unitPrice > 0 ? "VALOR/HORA · CALCULADO" : "SEM VALOR/HORA");
     }
-    return { key:item.key,item,minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis };
+    return { key:item.key,item,minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis,referenceType:item.referenceType || "direct" };
   });
   const custom = state.customRows.map((row,index)=>{
     const quantity = Math.max(1,Number(row.quantity)||1);
     const minutes = Math.max(0,Number(row.minutes)||0);
     const calculatedUnitPrice = state.hourly>0 ? minutes/60*state.hourly : 0;
     const unitPrice = Number(row.price)>0 ? Number(row.price) : calculatedUnitPrice;
-    return {key:`custom:${index}`,item:{label:row.name,type:row.referenceId ? "special-reference" : "custom",referenceId:row.referenceId || "",variables:row.variables || {}},minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis:Number(row.price)>0?"VALOR PRÓPRIO":"VALOR/HORA"};
+    const referenceType = row.methodReference ? "method" : "direct";
+    return {key:`custom:${index}`,item:{label:row.name,type:row.methodReference ? "method-reference" : "custom",referenceId:row.referenceId || "",variables:row.variables || {}},minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis:Number(row.price)>0?(row.methodReference?"MÉTODO · VALOR DERIVADO":"VALOR PRÓPRIO"):"VALOR/HORA",referenceType};
   });
   return [...rows,...custom];
+}
+
+function rowProcesses(row){ return row.item?.variables?.processes ? number(row.item.variables.processes) : ""; }
+function rowMachines(row){ return row.item?.variables?.machines ? number(row.item.variables.machines) : ""; }
+
+function renderQuoteRow(row,state){
+  return `<tr data-quote-row="${esc(row.key)}">
+    <td><strong>${esc(row.item.label)}</strong><small>${esc(row.basis)}</small></td>
+    <td>${rowProcesses(row)}</td>
+    <td>${rowMachines(row)}</td>
+    <td>${number(row.minutes)} MIN.</td>
+    <td>${state.pricingBasis === "hourly" && row.item.type !== "custom" && row.item.type !== "method-reference" ? `<div class="quote-price-editor"><input class="quote-unit-price" type="number" min="0" step="0.01" value="${Number(row.unitPrice||0).toFixed(2)}" data-item-price="${esc(row.key)}" aria-label="Valor unitário de ${esc(row.item.label)}"><small>${row.calculatedUnitPrice>0 && Math.abs(row.unitPrice-row.calculatedUnitPrice)>0.005 ? `CALC.: ${money(row.calculatedUnitPrice)}` : "EDITÁVEL"}</small></div>` : (row.unitPrice>0 ? money(row.unitPrice) : "SEM VALOR")}</td>
+    <td><input class="quote-quantity" type="number" min="1" step="1" value="${row.quantity}" data-item-quantity="${esc(row.key)}" aria-label="Quantidade de ${esc(row.item.label)}"></td>
+    <td>${row.total>0 ? money(row.total) : ""}</td>
+    <td>${row.item.type === "custom" || row.item.type === "method-reference" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
+  </tr>`;
+}
+
+function renderQuoteGroup(label,rows,state){
+  if(!rows.length) return "";
+  return `<tr class="quote-group-row"><th colspan="8" scope="colgroup">${esc(label)}</th></tr>${rows.map(row=>renderQuoteRow(row,state)).join("")}`;
 }
 
 function renderResults(root,state){
@@ -242,14 +330,12 @@ function renderResults(root,state){
   root.querySelector("[data-catalog-count]")?.replaceChildren(document.createTextNode(String(rows.length)));
   root.querySelector("[data-catalog-hours]")?.replaceChildren(document.createTextNode(`${number(totalHours)}H`));
   root.querySelector("[data-catalog-total]")?.replaceChildren(document.createTextNode(money(total)));
-  table.innerHTML = rows.length ? rows.map(row=>`<tr data-quote-row="${esc(row.key)}">
-    <td><strong>${esc(row.item.label)}</strong><small>${esc(row.basis)}</small></td>
-    <td>${number(row.minutes)} MIN.</td>
-    <td>${state.pricingBasis === "hourly" && row.item.type !== "custom" && row.item.type !== "special-reference" ? `<div class="quote-price-editor"><input class="quote-unit-price" type="number" min="0" step="0.01" value="${Number(row.unitPrice||0).toFixed(2)}" data-item-price="${esc(row.key)}" aria-label="Valor unitário de ${esc(row.item.label)}"><small>${row.calculatedUnitPrice>0 && Math.abs(row.unitPrice-row.calculatedUnitPrice)>0.005 ? `CALC.: ${money(row.calculatedUnitPrice)}` : "EDITÁVEL"}</small></div>` : (row.unitPrice>0 ? money(row.unitPrice) : "SEM VALOR")}</td>
-    <td><input class="quote-quantity" type="number" min="1" step="1" value="${row.quantity}" data-item-quantity="${esc(row.key)}" aria-label="Quantidade de ${esc(row.item.label)}"></td>
-    <td>${row.total>0 ? money(row.total) : ""}</td>
-    <td>${row.item.type === "custom" || row.item.type === "special-reference" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
-  </tr>`).join("") : `<tr><td colspan="6" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr>`;
+
+  const directRows=rows.filter(row=>row.referenceType !== "method");
+  const methodRows=rows.filter(row=>row.referenceType === "method");
+  table.innerHTML = rows.length
+    ? `${renderQuoteGroup("REFERÊNCIAS DIRETAS",directRows)}${renderQuoteGroup("REFERÊNCIAS METODOLÓGICAS",methodRows)}`
+    : `<tr><td colspan="8" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr>`;
 }
 
 function markGenerated(root,state){
@@ -277,7 +363,7 @@ function payload(state){
   const rows = calculate(state);
   const now = new Date();
   const data = {
-    schema:"FEITURA-GATE1-ROMANEIO-1.1",
+    schema:"FEITURA-GATE1-ROMANEIO-1.2",
     generatedISO:isoNow(),
     generatedAt:state.generatedAt || localDateTime(now),
     from:document.querySelector("[data-document-from]")?.value || "",
@@ -287,7 +373,7 @@ function payload(state){
     pricingBasis:state.pricingBasis,
     hourly:Number(state.hourly)||0,
     include:{...state.include},
-    items:rows.map(row=>({key:row.key,name:row.item.label,minutes:row.minutes,quantity:row.quantity,calculatedUnitPrice:row.calculatedUnitPrice||0,unitPrice:row.unitPrice,total:row.total,basis:row.basis,referenceId:row.item.referenceId||null,variables:row.item.variables||null})),
+    items:rows.map(row=>({key:row.key,name:row.item.label,minutes:row.minutes,quantity:row.quantity,calculatedUnitPrice:row.calculatedUnitPrice||0,unitPrice:row.unitPrice,total:row.total,basis:row.basis,referenceType:row.referenceType || "direct",referenceId:row.item.referenceId||null,variables:row.item.variables||null})),
     total:rows.reduce((sum,row)=>sum+row.total,0)
   };
   data.trackingId=trackingId(data);
@@ -304,15 +390,18 @@ const csv = value => `"${String(value ?? "").replace(/"/g,'""')}"`;
 
 function buildHtml(data,review=true){
   const option = data.include || {};
-  const rows = data.items.map(i=>`<tr><td><strong>${esc(i.name)}</strong><small>${esc(i.basis)}</small></td><td>${number(i.minutes)} MIN.</td><td>${i.unitPrice?money(i.unitPrice):"SEM VALOR"}</td><td>${number(i.quantity)}</td><td>${i.total?money(i.total):""}</td></tr>`).join("");
+  const directItems=data.items.filter(i=>i.referenceType !== "method");
+  const methodItems=data.items.filter(i=>i.referenceType === "method");
+  const htmlRows=items=>items.length ? `<tr class="quote-group-row"><th colspan="7">${items===directItems ? "REFERÊNCIAS DIRETAS" : "REFERÊNCIAS METODOLÓGICAS"}</th></tr>${items.map(i=>`<tr><td><strong>${esc(i.name)}</strong><small>${esc(i.basis)}</small></td><td>${esc(i.variables?.processes||"")}</td><td>${esc(i.variables?.machines||"")}</td><td>${number(i.minutes)} MIN.</td><td>${i.unitPrice?money(i.unitPrice):"SEM VALOR"}</td><td>${number(i.quantity)}</td><td>${i.total?money(i.total):""}</td></tr>`).join("")}` : "";
+  const rows=htmlRows(directItems)+htmlRows(methodItems);
   const consent = review ? `<div class="validation"><label><input id="lgpdConsent" type="checkbox"><span>Declaro que compreendo que os dados utilizados nesta revisão são tratados como dados públicos ou informações fornecidas para a composição do documento. Concordo com o manuseio necessário à geração e impressão deste romaneio, observados os princípios aplicáveis da LGPD.</span></label><button id="printButton" type="button" disabled>VALIDAR E IMPRIMIR</button><button id="recordButton" type="button">BAIXAR REGISTRO</button></div>` : "";
   const contact = option.contact ? `<section class="field-block"><h3>DADOS DE CONTATO E ENDEREÇO</h3><div class="blank-line">______________________________________________</div></section>` : "";
   const production = option.production ? `<section class="field-block"><h3>SOLICITAÇÃO DE PRODUÇÃO</h3><div class="blank-area">\u00a0</div></section>` : "";
   const deadline = option.deadline ? `<section class="field-block"><h3>PRAZO VIGENTE</h3><p>${esc(data.deadlineFrom || "____/____/________")} A ${esc(data.deadlineTo || "____/____/________")}</p></section>` : "";
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>sua FEITURA | ${esc(data.trackingId)}</title><style>
 @page{size:A4;margin:18mm 14mm 20mm}*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:"DM Sans",Arial,sans-serif;color:#171713;background:#eee9df;font-size:11px;line-height:1.45}body:before{content:"";display:block} .paper{max-width:900px;margin:24px auto;background:#fbfaf6;padding:34px 38px 54px;box-shadow:0 10px 40px rgba(23,23,19,.08)}header{border-bottom:4px solid #394337;padding-bottom:18px;margin-bottom:26px;color:#252d25}header h1{margin:0;font:700 30px/1 "DM Sans",Arial,sans-serif;letter-spacing:-.04em}header h2{margin:8px 0 0;font:600 12px/1.35 "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}header h3{margin:6px 0 0;font:500 10px "DM Mono",monospace;letter-spacing:.06em;text-transform:uppercase}main h2{margin:0 0 4px;font:400 25px/1.15 Georgia,serif;color:#171713}main>.eyebrow{font:600 9px "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#394337} .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;margin:18px 0 22px}.meta div{padding:13px;border-right:1px solid #cfc9bc;min-height:68px}.meta div:last-child{border-right:0}.meta span,.field-block h3{display:block;font:600 8px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#394337}.meta strong{display:block;margin-top:8px;font:500 10px "DM Mono",monospace;text-transform:uppercase;word-break:break-word}.field-block{margin:14px 0;padding:12px 14px;border:1px solid #d7d1c6}.field-block h3{margin:0 0 7px}.blank-line{font:500 10px "DM Mono",monospace}.blank-area{height:32px;border-bottom:1px solid #888}.table-wrap{margin-top:22px}.table-title{font:600 9px "DM Mono",monospace;letter-spacing:.08em;color:#394337;margin-bottom:8px}table{width:100%;border-collapse:collapse;border:1px solid #bfc0ba;table-layout:fixed}thead{display:table-header-group}th{background:#394337;color:#fbfaf6;text-align:left;font:600 8px "DM Mono",monospace;letter-spacing:.05em;padding:8px;text-transform:uppercase}td{padding:9px 8px;border-top:1px solid #d2d0c8;vertical-align:top;font:500 9px "DM Mono",monospace;word-break:break-word}td strong{display:block;font:700 10px Georgia,serif;color:#171713}td small{display:block;margin-top:3px;font:500 7px "DM Mono",monospace;color:#716f66}.summary{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;border-top:0}.summary div{padding:13px;border-right:1px solid #cfc9bc}.summary div:last-child{border-right:0}.summary span{display:block;font:600 8px "DM Mono",monospace;color:#394337}.summary strong{display:block;margin-top:4px;font:400 18px Georgia,serif}.trace{margin-top:18px;padding:10px 12px;background:#eee9df;color:#252d25;font:500 8px "DM Mono",monospace;word-break:break-all}.validation{margin-top:28px;padding:18px;border:1px solid #394337;background:#eee9df;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.validation label{display:flex;gap:10px;align-items:flex-start;flex:1 1 58%;min-width:320px;font:500 9px/1.5 "DM Sans",Arial,sans-serif;color:#252d25}.validation input{margin-top:2px;accent-color:#394337}.validation button{border:0;background:#252d25;color:#fbfaf6;padding:11px 15px;font:600 9px "DM Mono",monospace;letter-spacing:.05em;cursor:pointer}.validation button:disabled{opacity:.35;cursor:not-allowed}.validation button#recordButton{background:transparent;color:#252d25;border:1px solid #252d25}.screen-note{margin:18px 0 0;color:#716f66;font:500 8px/1.5 "DM Mono",monospace}footer{margin-top:28px;padding-top:12px;border-top:2px solid #394337;color:#252d25;font:500 8px/1.5 "DM Mono",monospace;display:flex;justify-content:space-between;gap:20px}footer a{color:inherit}footer strong{font-weight:700} @media(max-width:700px){body{background:#fbfaf6}.paper{margin:0;padding:22px}.meta{grid-template-columns:1fr}.meta div{border-right:0;border-bottom:1px solid #cfc9bc}.meta div:last-child{border-bottom:0}footer{display:block}.validation button{width:100%}} @media print{body{background:#fff}.paper{max-width:none;margin:0;padding:0;box-shadow:none}header{margin-bottom:20px}.validation,.screen-note{display:none!important}footer{position:fixed;left:0;right:0;bottom:0;margin:0;padding:7px 0 0;border-top:1.5px solid #394337;background:#fff;font-size:7px}.trace{page-break-inside:avoid}.field-block{break-inside:avoid}tr{break-inside:avoid}a{color:#252d25;text-decoration:none}}
-</style></head><body><div class="paper"><header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR® | By Victor Mordekai</h3></header><main><div class="eyebrow">05 / revisão final · documento não editável</div><h2>Orçamento / romaneio</h2><div class="meta"><div><span>DE</span><strong>${esc(data.from || "") || "________________________________"}</strong></div><div><span>PARA</span><strong>${esc(data.to || "") || "________________________________"}</strong></div><div><span>DATA DA FEITURA</span><strong>${esc(data.generatedAt)}</strong></div></div>${contact}${production}${deadline}${option.priceTable ? `<div class="table-wrap"><div class="table-title">TABELA DE CUSTOS</div><table><thead><tr><th style="width:38%">ITEM / SERVIÇO</th><th style="width:14%">TEMPO</th><th style="width:17%">VALOR UNIT.</th><th style="width:12%">QTD.</th><th style="width:19%">TOTAL</th></tr></thead><tbody>${rows || '<tr><td colspan="5">NENHUM ITEM COTADO.</td></tr>'}</tbody></table><div class="summary"><div><span>ITENS</span><strong>${data.items.length}</strong></div><div><span>TEMPO TOTAL</span><strong>${number(data.items.reduce((s,i)=>s+(i.minutes/60)*i.quantity,0))}H</strong></div><div><span>TOTAL</span><strong>${money(data.total)}</strong></div></div></div>` : ""}<div class="trace"><strong>RASTREABILIDADE:</strong> ${esc(data.trackingId)}<br>GERADO LOCALMENTE · ${esc(data.generatedAt)} · FEITURA-GATE1-ROMANEIO-1.1</div>${consent}</main><footer><span><strong>RETEAR® ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA®</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer></div><script>
-const DATA=${JSON.stringify(data)};const consent=document.getElementById('lgpdConsent');const printButton=document.getElementById('printButton');const recordButton=document.getElementById('recordButton');if(consent&&printButton){consent.addEventListener('change',()=>{printButton.disabled=!consent.checked;});}function downloadRecord(){const payload={schema:'FEITURA-GATE1-TRACE-1.0',recordType:'FEITURA_GATE1_LOCAL_RECORD',trackingId:DATA.trackingId,generatedISO:DATA.generatedISO,generatedAt:DATA.generatedAt,pricingBasis:DATA.pricingBasis,hourly:DATA.pricingBasis==='hourly'?DATA.hourly:null,itemCount:DATA.items.length,items:DATA.items.map(i=>({key:i.key,name:i.name,minutes:i.minutes,quantity:i.quantity,calculatedUnitPrice:i.calculatedUnitPrice,unitPrice:i.unitPrice,total:i.total,basis:i.basis,customized:i.basis.includes('AJUSTADO')||i.basis==='VALOR PRÓPRIO'})),total:DATA.total,source:'FEITURA Gate 1.1 / revisão transitória',persistence:'local-download-only; future ingestion endpoint pending Gate 2'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=DATA.trackingId+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}recordButton?.addEventListener('click',downloadRecord);printButton?.addEventListener('click',()=>{downloadRecord();window.print();});
+</style></head><body><div class="paper"><header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR® | By Victor Mordekai</h3></header><main><div class="eyebrow">05 / revisão final · documento não editável</div><h2>Orçamento / romaneio</h2><div class="meta"><div><span>DE</span><strong>${esc(data.from || "") || "________________________________"}</strong></div><div><span>PARA</span><strong>${esc(data.to || "") || "________________________________"}</strong></div><div><span>DATA DA FEITURA</span><strong>${esc(data.generatedAt)}</strong></div></div>${contact}${production}${deadline}${option.priceTable ? `<div class="table-wrap"><div class="table-title">TABELA DE CUSTOS</div><table><thead><tr><th style="width:30%">ITEM / SERVIÇO</th><th style="width:9%">PROCESSOS</th><th style="width:9%">MÁQUINAS</th><th style="width:12%">TEMPO</th><th style="width:15%">VALOR UNIT.</th><th style="width:10%">QTD.</th><th style="width:15%">TOTAL</th></tr></thead><tbody>${rows || '<tr><td colspan="7">NENHUM ITEM COTADO.</td></tr>'}</tbody></table><div class="summary"><div><span>ITENS</span><strong>${data.items.length}</strong></div><div><span>TEMPO TOTAL</span><strong>${number(data.items.reduce((s,i)=>s+(i.minutes/60)*i.quantity,0))}H</strong></div><div><span>TOTAL</span><strong>${money(data.total)}</strong></div></div></div>` : ""}<div class="trace"><strong>RASTREABILIDADE:</strong> ${esc(data.trackingId)}<br>GERADO LOCALMENTE · ${esc(data.generatedAt)} · FEITURA-GATE1-ROMANEIO-1.2</div>${consent}</main><footer><span><strong>RETEAR® ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA®</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer></div><script>
+const DATA=${JSON.stringify(data)};const consent=document.getElementById('lgpdConsent');const printButton=document.getElementById('printButton');const recordButton=document.getElementById('recordButton');if(consent&&printButton){consent.addEventListener('change',()=>{printButton.disabled=!consent.checked;});}function downloadRecord(){const payload={schema:'FEITURA-GATE1-TRACE-1.0',recordType:'FEITURA_GATE1_LOCAL_RECORD',trackingId:DATA.trackingId,generatedISO:DATA.generatedISO,generatedAt:DATA.generatedAt,pricingBasis:DATA.pricingBasis,hourly:DATA.pricingBasis==='hourly'?DATA.hourly:null,itemCount:DATA.items.length,items:DATA.items.map(i=>({key:i.key,name:i.name,minutes:i.minutes,quantity:i.quantity,calculatedUnitPrice:i.calculatedUnitPrice,unitPrice:i.unitPrice,total:i.total,basis:i.basis,referenceType:i.referenceType||'direct',customized:i.basis.includes('AJUSTADO')||i.basis==='VALOR PRÓPRIO'})),total:DATA.total,source:'FEITURA Gate 1.2 / revisão transitória',persistence:'local-download-only; future ingestion endpoint pending Gate 2'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=DATA.trackingId+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}recordButton?.addEventListener('click',downloadRecord);printButton?.addEventListener('click',()=>{downloadRecord();window.print();});
 </script></body></html>`;
 }
 
@@ -321,7 +410,7 @@ function exportCatalog(root,state,format){
   const data = payload(state);
   if(format === "json") return exportFile(`${data.trackingId}.json`,JSON.stringify(data,null,2),"application/json;charset=utf-8");
   if(format === "html") return exportFile(`suafeitura-${data.trackingId}.html`,buildHtml(data,false),"text/html;charset=utf-8");
-  const lines = [["FEITURA: ORÇAMENTO / ROMANEIO"],["RASTREABILIDADE",data.trackingId],["GERADO EM",data.generatedAt],["DE",data.from],["PARA",data.to],["REFERÊNCIA",data.pricingBasis === "hourly" ? "VALOR/HORA" : "VALOR PADRÃO"],["VALOR/HORA",data.hourly ? data.hourly.toFixed(2) : ""],[],["ITEM","TEMPO MIN.","VALOR UNIT.","QUANTIDADE","TOTAL"],...data.items.map(i=>[i.name,i.minutes.toFixed(2),i.unitPrice.toFixed(2),i.quantity,i.total.toFixed(2)]),[],["TOTAL","","","",data.total.toFixed(2)]];
+  const lines = [["FEITURA: ORÇAMENTO / ROMANEIO"],["RASTREABILIDADE",data.trackingId],["GERADO EM",data.generatedAt],["DE",data.from],["PARA",data.to],["REFERÊNCIA",data.pricingBasis === "hourly" ? "VALOR/HORA" : "VALOR PADRÃO"],["VALOR/HORA",data.hourly ? data.hourly.toFixed(2) : ""],[],["ITEM","PROCESSOS","MÁQUINAS","TEMPO MIN.","VALOR UNIT.","QUANTIDADE","TOTAL"],...data.items.map(i=>[i.name,i.variables?.processes||"",i.variables?.machines||"",i.minutes.toFixed(2),i.unitPrice.toFixed(2),i.quantity,i.total.toFixed(2)]),[],["TOTAL","","","",data.total.toFixed(2)]];
   exportFile(`${data.trackingId}.csv`,"\uFEFF"+lines.map(row=>row.map(csv).join(";")).join("\n"),"text/csv;charset=utf-8");
 }
 
@@ -370,9 +459,9 @@ export function initGlossary(){
     });
     root.addEventListener("click",event=>{
       const referenceDetail=event.target.closest("[data-reference-details]"); if(referenceDetail){const panel=root.querySelector("[data-reference-panel]");if(panel){const open=referenceDetail.getAttribute("aria-expanded")==="true";referenceDetail.setAttribute("aria-expanded",String(!open));panel.hidden=open;}return;}
-      const specialRef=event.target.closest("[data-special-ref]"); if(specialRef){openSpecialReference(root,state,specialRef.dataset.specialRef);return;}
-      if(event.target.closest("[data-special-ref-close]")){closeSpecialReference(root);return;}
-      if(event.target.closest("[data-special-ref-add]")){addSpecialReference(root,state);return;}
+      const methodRef=event.target.closest("[data-method-ref]"); if(methodRef){openMethodReference(root,state,methodRef.dataset.methodRef);return;}
+      if(event.target.closest("[data-method-ref-close]")){closeMethodReference(root);return;}
+      if(event.target.closest("[data-method-ref-add]")){addMethodReference(root,state);return;}
       const detail=event.target.closest("[data-glossary-detail]"); if(detail){const panel=detail.closest("[data-glossary-item]")?.querySelector(".glossary-detail-panel");if(panel){const open=detail.getAttribute("aria-expanded")==="true";detail.setAttribute("aria-expanded",String(!open));panel.hidden=open}return;}
       if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
       if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customPrices.clear();state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}

@@ -351,8 +351,8 @@
 
           <div class="quote-document-table-wrap">
             <table class="quote-document-table">
-              <thead><tr><th>ITEM / SERVIÇO</th><th>TEMPO</th><th>VALOR UNIT.</th><th>QUANTIDADE</th><th>TOTAL</th><th></th></tr></thead>
-              <tbody data-catalog-table><tr><td colspan="6" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr></tbody>
+              <thead><tr><th>ITEM / SERVIÇO</th><th>PROCESSOS</th><th>MÁQUINAS</th><th>TEMPO</th><th>VALOR UNIT.</th><th>QUANTIDADE</th><th>TOTAL</th><th></th></tr></thead>
+              <tbody data-catalog-table><tr><td colspan="8" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr></tbody>
             </table>
           </div>
 
@@ -371,7 +371,7 @@
               <div class="section-index mono">03 / COTAR TABELA DE CUSTOS PELO BANCO DE DADOS FEITURA</div>
               <h2 id="database-title">Escolha a referência de valor e filtre a base.</h2>
             </div>
-            <p>O banco é consultado como conjunto. Use o filtro para exibir um grupo e cote os registros exibidos de uma vez. As referências especiais abrem configurações próprias para produtos cuja estrutura não cabe em um único artigo do vestuário.</p>
+            <p>O banco FEITURA reúne referências diretas e referências metodológicas. Itens e serviços podem ser adicionados diretamente; métodos de cronoanálise abrem uma configuração própria antes de entrar no mesmo romaneio. Quando ambos forem utilizados, o documento os organiza em blocos condicionais, sem exibir grupos vazios.</p>
           </div>
 
           <fieldset class="pricing-reference">
@@ -383,7 +383,7 @@
           <div class="glossary-toolbar">
             <label class="glossary-search">
               <span class="mono">BUSCAR</span>
-              <input type="search" data-glossary-search placeholder="PRODUTO, OPERAÇÃO, COMPONENTE, ACABAMENTO...">
+              <input type="search" data-glossary-search placeholder="PRODUTO, OPERAÇÃO, COMPONENTE, MÉTODO...">
             </label>
             <label>
               <span class="mono">GRUPO</span>
@@ -393,8 +393,7 @@
                 <option value="operations">Operações</option>
                 <option value="repairs">Consertos e serviços</option>
                 <option value="methods">Método de cronoanálise</option>
-                <option value="specialRefs">Referências especiais</option>
-              </select>
+                              </select>
             </label>
             <div class="glossary-tools">
               <button type="button" class="button button-dark" data-quote-visible>COTAR REGISTROS EXIBIDOS</button>
