@@ -13,7 +13,7 @@
 .button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border:1px solid transparent;font:700 .72rem "DM Sans",sans-serif;letter-spacing:.1em;text-transform:uppercase;transition:transform .25s var(--ease),background .25s,color .25s,border-color .25s}
 .button:hover{transform:translateY(-2px)}
 .button-small{min-height:42px;padding-inline:18px}
-.button-dark{background:var(--ink);color:var(--white)}
+.button-dark{background:var(--olive-dark);color:var(--white)}
 .button-outline{border-color:var(--ink)}
 .button-paper{background:var(--paper);color:var(--ink)}
 .button-light-outline{border-color:rgba(251,250,246,.55);color:var(--white)}

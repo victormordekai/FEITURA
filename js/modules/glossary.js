@@ -4,6 +4,8 @@ const money = value => new Intl.NumberFormat("pt-BR", { style: "currency", curre
 const number = value => new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(Number(value) || 0);
 const esc = value => String(value ?? "").replace(/[&<>\"]/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;" }[char]));
 const upper = value => String(value ?? "").toLocaleUpperCase("pt-BR");
+const isoNow = () => new Date().toISOString();
+const localDateTime = date => new Intl.DateTimeFormat("pt-BR", { dateStyle:"short", timeStyle:"medium" }).format(date);
 
 const records = () => [
   ...glossaryData.models.map(item => ({ ...item, key:`model:${item.name}`, label:item.name, group:"models", groupLabel:"Artigos e modelos", category:item.material_family || "Artigo", quoteable:true })),
@@ -28,6 +30,7 @@ function stateFor(root){
     root._quoteState = {
       selected:new Set(),
       quantities:new Map(),
+      customPrices:new Map(),
       hourly:0,
       pricingBasis:"hourly",
       customRows:[],
@@ -48,20 +51,23 @@ function filteredRecords(root){
   });
 }
 
-function pricingText(item,state){
-  if(state.pricingBasis === "standard"){
-    return standardPriceFor(item) > 0 ? money(standardPriceFor(item)) : "SEM VALOR PADRÃO";
-  }
+function calculatedPrice(item,state){
   const mins = minutesFor(item);
-  return state.hourly > 0 && mins > 0 ? money(mins / 60 * state.hourly) : "DEFINA O VALOR/HORA";
+  return state.hourly > 0 && mins > 0 ? mins / 60 * state.hourly : 0;
+}
+
+function pricingText(item,state){
+  if(state.pricingBasis === "standard") return standardPriceFor(item) > 0 ? money(standardPriceFor(item)) : "SEM VALOR PADRÃO";
+  const custom = state.customPrices.get(item.key);
+  if(Number(custom) > 0) return `${money(custom)} AJUSTADO`;
+  const calculated = calculatedPrice(item,state);
+  return calculated > 0 ? money(calculated) : "DEFINA O VALOR/HORA";
 }
 
 function renderRecord(item,state){
   const selected = state.selected.has(item.key);
   const mins = minutesFor(item);
   const standard = standardPriceFor(item);
-  const searchable = `${item.label} ${item.category || ""} ${item.material_family || item.material || ""} ${item.notes || ""}`;
-  const disabled = item.quoteable ? "" : "disabled";
   return `<article class="glossary-item${selected ? " is-selected" : ""}${item.quoteable ? "" : " is-reference"}" data-glossary-item data-key="${esc(item.key)}">
     ${item.quoteable ? `<label class="glossary-select" aria-label="Selecionar ${esc(item.label)} para a tabela de custos"><input type="checkbox" data-glossary-check ${selected ? "checked" : ""}><span aria-hidden="true"></span></label>` : `<span class="glossary-reference-mark mono">REF.</span>`}
     <div class="glossary-item-main">
@@ -98,20 +104,24 @@ function calculate(state){
     const minutes = minutesFor(item);
     let unitPrice = 0;
     let basis = "";
+    let calculatedUnitPrice = 0;
     if(state.pricingBasis === "standard"){
       unitPrice = standardPriceFor(item);
       basis = unitPrice > 0 ? "VALOR PADRÃO" : "SEM VALOR PADRÃO";
     }else{
-      unitPrice = state.hourly > 0 && minutes > 0 ? minutes / 60 * state.hourly : 0;
-      basis = unitPrice > 0 ? "VALOR/HORA" : "SEM VALOR/HORA";
+      calculatedUnitPrice = calculatedPrice(item,state);
+      const custom = Number(state.customPrices.get(item.key));
+      unitPrice = custom > 0 ? custom : calculatedUnitPrice;
+      basis = custom > 0 ? "VALOR/HORA · AJUSTADO" : (unitPrice > 0 ? "VALOR/HORA · CALCULADO" : "SEM VALOR/HORA");
     }
-    return { key:item.key,item,minutes,quantity,unitPrice,total:unitPrice*quantity,basis };
+    return { key:item.key,item,minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis };
   });
   const custom = state.customRows.map((row,index)=>{
     const quantity = Math.max(1,Number(row.quantity)||1);
     const minutes = Math.max(0,Number(row.minutes)||0);
-    const unitPrice = Number(row.price)>0 ? Number(row.price) : (state.pricingBasis === "hourly" && state.hourly>0 ? minutes/60*state.hourly : 0);
-    return {key:`custom:${index}`,item:{label:row.name,type:"custom"},minutes,quantity,unitPrice,total:unitPrice*quantity,basis:Number(row.price)>0?"VALOR PRÓPRIO":"VALOR/HORA"};
+    const calculatedUnitPrice = state.hourly>0 ? minutes/60*state.hourly : 0;
+    const unitPrice = Number(row.price)>0 ? Number(row.price) : calculatedUnitPrice;
+    return {key:`custom:${index}`,item:{label:row.name,type:"custom"},minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis:Number(row.price)>0?"VALOR PRÓPRIO":"VALOR/HORA"};
   });
   return [...rows,...custom];
 }
@@ -128,41 +138,95 @@ function renderResults(root,state){
   table.innerHTML = rows.length ? rows.map(row=>`<tr data-quote-row="${esc(row.key)}">
     <td><strong>${esc(row.item.label)}</strong><small>${esc(row.basis)}</small></td>
     <td>${number(row.minutes)} MIN.</td>
-    <td>${row.unitPrice>0 ? money(row.unitPrice) : "SEM VALOR"}</td>
+    <td>${state.pricingBasis === "hourly" && row.item.type !== "custom" ? `<div class="quote-price-editor"><input class="quote-unit-price" type="number" min="0" step="0.01" value="${Number(row.unitPrice||0).toFixed(2)}" data-item-price="${esc(row.key)}" aria-label="Valor unitário de ${esc(row.item.label)}"><small>${row.calculatedUnitPrice>0 && Math.abs(row.unitPrice-row.calculatedUnitPrice)>0.005 ? `CALC.: ${money(row.calculatedUnitPrice)}` : "EDITÁVEL"}</small></div>` : (row.unitPrice>0 ? money(row.unitPrice) : "SEM VALOR")}</td>
     <td><input class="quote-quantity" type="number" min="1" step="1" value="${row.quantity}" data-item-quantity="${esc(row.key)}" aria-label="Quantidade de ${esc(row.item.label)}"></td>
     <td>${row.total>0 ? money(row.total) : ""}</td>
     <td>${row.item.type === "custom" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
   </tr>`).join("") : `<tr><td colspan="6" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr>`;
 }
 
-function payload(state){
-  const rows = calculate(state);
-  return { mode:state.pricingBasis, pricingBasis:state.pricingBasis, hourly:state.hourly, include:state.include, generatedAt:state.generatedAt || new Date().toLocaleString("pt-BR"), from:document.querySelector("[data-document-from]")?.value || "", to:document.querySelector("[data-document-to]")?.value || "", deadlineFrom:document.querySelector("[data-deadline-from]")?.value || "", deadlineTo:document.querySelector("[data-deadline-to]")?.value || "", items:rows.map(row=>({name:row.item.label,minutes:row.minutes,quantity:row.quantity,unitPrice:row.unitPrice,total:row.total,basis:row.basis})), total:rows.reduce((sum,row)=>sum+row.total,0)};
-}
-
 function markGenerated(root,state){
-  state.generatedAt = new Date().toLocaleString("pt-BR");
+  state.generatedAt = localDateTime(new Date());
   root.querySelector("[data-document-generated-at]")?.replaceChildren(document.createTextNode(state.generatedAt));
 }
 
+function fingerprint(data){
+  const source = JSON.stringify(data.items.map(i=>[i.name,i.quantity,Math.round(i.unitPrice*100)]));
+  let hash = 2166136261;
+  for(let i=0;i<source.length;i++) hash = Math.imul(hash ^ source.charCodeAt(i), 16777619);
+  return (hash >>> 0).toString(36).toUpperCase().slice(-4).padStart(4,"0");
+}
+
+function trackingId(data){
+  const d = new Date(data.generatedISO || Date.now());
+  const pad = n => String(n).padStart(2,"0");
+  const timestamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  const itemCount = String(data.items.length).padStart(4,"0").slice(-4);
+  const totalInteger = String(Math.floor(Math.max(0,data.total))).padStart(4,"0").slice(-4);
+  return `suafeitura${timestamp}${itemCount}${totalInteger}${fingerprint(data)}`;
+}
+
+function payload(state){
+  const rows = calculate(state);
+  const now = new Date();
+  const data = {
+    schema:"FEITURA-GATE1-ROMANEIO-1.1",
+    generatedISO:isoNow(),
+    generatedAt:state.generatedAt || localDateTime(now),
+    from:document.querySelector("[data-document-from]")?.value || "",
+    to:document.querySelector("[data-document-to]")?.value || "",
+    deadlineFrom:document.querySelector("[data-deadline-from]")?.value || "",
+    deadlineTo:document.querySelector("[data-deadline-to]")?.value || "",
+    pricingBasis:state.pricingBasis,
+    hourly:Number(state.hourly)||0,
+    include:{...state.include},
+    items:rows.map(row=>({key:row.key,name:row.item.label,minutes:row.minutes,quantity:row.quantity,calculatedUnitPrice:row.calculatedUnitPrice||0,unitPrice:row.unitPrice,total:row.total,basis:row.basis})),
+    total:rows.reduce((sum,row)=>sum+row.total,0)
+  };
+  data.trackingId=trackingId(data);
+  return data;
+}
+
 function exportFile(name,content,type){
-  const blob = new Blob([content],{type}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const blob = new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 const csv = value => `"${String(value ?? "").replace(/"/g,'""')}"`;
+
+function buildHtml(data,review=true){
+  const option = data.include || {};
+  const rows = data.items.map(i=>`<tr><td><strong>${esc(i.name)}</strong><small>${esc(i.basis)}</small></td><td>${number(i.minutes)} MIN.</td><td>${i.unitPrice?money(i.unitPrice):"SEM VALOR"}</td><td>${number(i.quantity)}</td><td>${i.total?money(i.total):""}</td></tr>`).join("");
+  const consent = review ? `<div class="validation"><label><input id="lgpdConsent" type="checkbox"><span>Declaro que compreendo que os dados utilizados nesta revisão são tratados como dados públicos ou informações fornecidas para a composição do documento. Concordo com o manuseio necessário à geração e impressão deste romaneio, observados os princípios aplicáveis da LGPD.</span></label><button id="printButton" type="button" disabled>VALIDAR E IMPRIMIR</button><button id="recordButton" type="button">BAIXAR REGISTRO</button></div>` : "";
+  const contact = option.contact ? `<section class="field-block"><h3>DADOS DE CONTATO E ENDEREÇO</h3><div class="blank-line">______________________________________________</div></section>` : "";
+  const production = option.production ? `<section class="field-block"><h3>SOLICITAÇÃO DE PRODUÇÃO</h3><div class="blank-area">\u00a0</div></section>` : "";
+  const deadline = option.deadline ? `<section class="field-block"><h3>PRAZO VIGENTE</h3><p>${esc(data.deadlineFrom || "____/____/________")} A ${esc(data.deadlineTo || "____/____/________")}</p></section>` : "";
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>sua FEITURA | ${esc(data.trackingId)}</title><style>
+@page{size:A4;margin:18mm 14mm 20mm}*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:"DM Sans",Arial,sans-serif;color:#171713;background:#eee9df;font-size:11px;line-height:1.45}body:before{content:"";display:block} .paper{max-width:900px;margin:24px auto;background:#fbfaf6;padding:34px 38px 54px;box-shadow:0 10px 40px rgba(23,23,19,.08)}header{border-bottom:4px solid #394337;padding-bottom:18px;margin-bottom:26px;color:#252d25}header h1{margin:0;font:700 30px/1 "DM Sans",Arial,sans-serif;letter-spacing:-.04em}header h2{margin:8px 0 0;font:600 12px/1.35 "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}header h3{margin:6px 0 0;font:500 10px "DM Mono",monospace;letter-spacing:.06em;text-transform:uppercase}main h2{margin:0 0 4px;font:400 25px/1.15 Georgia,serif;color:#171713}main>.eyebrow{font:600 9px "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#394337} .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;margin:18px 0 22px}.meta div{padding:13px;border-right:1px solid #cfc9bc;min-height:68px}.meta div:last-child{border-right:0}.meta span,.field-block h3{display:block;font:600 8px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#394337}.meta strong{display:block;margin-top:8px;font:500 10px "DM Mono",monospace;text-transform:uppercase;word-break:break-word}.field-block{margin:14px 0;padding:12px 14px;border:1px solid #d7d1c6}.field-block h3{margin:0 0 7px}.blank-line{font:500 10px "DM Mono",monospace}.blank-area{height:32px;border-bottom:1px solid #888}.table-wrap{margin-top:22px}.table-title{font:600 9px "DM Mono",monospace;letter-spacing:.08em;color:#394337;margin-bottom:8px}table{width:100%;border-collapse:collapse;border:1px solid #bfc0ba;table-layout:fixed}thead{display:table-header-group}th{background:#394337;color:#fbfaf6;text-align:left;font:600 8px "DM Mono",monospace;letter-spacing:.05em;padding:8px;text-transform:uppercase}td{padding:9px 8px;border-top:1px solid #d2d0c8;vertical-align:top;font:500 9px "DM Mono",monospace;word-break:break-word}td strong{display:block;font:700 10px Georgia,serif;color:#171713}td small{display:block;margin-top:3px;font:500 7px "DM Mono",monospace;color:#716f66}.summary{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;border-top:0}.summary div{padding:13px;border-right:1px solid #cfc9bc}.summary div:last-child{border-right:0}.summary span{display:block;font:600 8px "DM Mono",monospace;color:#394337}.summary strong{display:block;margin-top:4px;font:400 18px Georgia,serif}.trace{margin-top:18px;padding:10px 12px;background:#eee9df;color:#252d25;font:500 8px "DM Mono",monospace;word-break:break-all}.validation{margin-top:28px;padding:18px;border:1px solid #394337;background:#eee9df;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.validation label{display:flex;gap:10px;align-items:flex-start;flex:1 1 58%;min-width:320px;font:500 9px/1.5 "DM Sans",Arial,sans-serif;color:#252d25}.validation input{margin-top:2px;accent-color:#394337}.validation button{border:0;background:#252d25;color:#fbfaf6;padding:11px 15px;font:600 9px "DM Mono",monospace;letter-spacing:.05em;cursor:pointer}.validation button:disabled{opacity:.35;cursor:not-allowed}.validation button#recordButton{background:transparent;color:#252d25;border:1px solid #252d25}.screen-note{margin:18px 0 0;color:#716f66;font:500 8px/1.5 "DM Mono",monospace}footer{margin-top:28px;padding-top:12px;border-top:2px solid #394337;color:#252d25;font:500 8px/1.5 "DM Mono",monospace;display:flex;justify-content:space-between;gap:20px}footer a{color:inherit}footer strong{font-weight:700} @media(max-width:700px){body{background:#fbfaf6}.paper{margin:0;padding:22px}.meta{grid-template-columns:1fr}.meta div{border-right:0;border-bottom:1px solid #cfc9bc}.meta div:last-child{border-bottom:0}footer{display:block}.validation button{width:100%}} @media print{body{background:#fff}.paper{max-width:none;margin:0;padding:0;box-shadow:none}header{margin-bottom:20px}.validation,.screen-note{display:none!important}footer{position:fixed;left:0;right:0;bottom:0;margin:0;padding:7px 0 0;border-top:1.5px solid #394337;background:#fff;font-size:7px}.trace{page-break-inside:avoid}.field-block{break-inside:avoid}tr{break-inside:avoid}a{color:#252d25;text-decoration:none}}
+</style></head><body><div class="paper"><header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR® | By Victor Mordekai</h3></header><main><div class="eyebrow">05 / revisão final · documento não editável</div><h2>Orçamento / romaneio</h2><div class="meta"><div><span>DE</span><strong>${esc(data.from || "") || "________________________________"}</strong></div><div><span>PARA</span><strong>${esc(data.to || "") || "________________________________"}</strong></div><div><span>DATA DA FEITURA</span><strong>${esc(data.generatedAt)}</strong></div></div>${contact}${production}${deadline}${option.priceTable ? `<div class="table-wrap"><div class="table-title">TABELA DE CUSTOS</div><table><thead><tr><th style="width:38%">ITEM / SERVIÇO</th><th style="width:14%">TEMPO</th><th style="width:17%">VALOR UNIT.</th><th style="width:12%">QTD.</th><th style="width:19%">TOTAL</th></tr></thead><tbody>${rows || '<tr><td colspan="5">NENHUM ITEM COTADO.</td></tr>'}</tbody></table><div class="summary"><div><span>ITENS</span><strong>${data.items.length}</strong></div><div><span>TEMPO TOTAL</span><strong>${number(data.items.reduce((s,i)=>s+(i.minutes/60)*i.quantity,0))}H</strong></div><div><span>TOTAL</span><strong>${money(data.total)}</strong></div></div></div>` : ""}<div class="trace"><strong>RASTREABILIDADE:</strong> ${esc(data.trackingId)}<br>GERADO LOCALMENTE · ${esc(data.generatedAt)} · FEITURA-GATE1-ROMANEIO-1.1</div>${consent}</main><footer><span><strong>RETEAR® ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA®</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer></div><script>
+const DATA=${JSON.stringify(data)};const consent=document.getElementById('lgpdConsent');const printButton=document.getElementById('printButton');const recordButton=document.getElementById('recordButton');if(consent&&printButton){consent.addEventListener('change',()=>{printButton.disabled=!consent.checked;});}function downloadRecord(){const payload={schema:'FEITURA-GATE1-TRACE-1.0',recordType:'FEITURA_GATE1_LOCAL_RECORD',trackingId:DATA.trackingId,generatedISO:DATA.generatedISO,generatedAt:DATA.generatedAt,pricingBasis:DATA.pricingBasis,hourly:DATA.pricingBasis==='hourly'?DATA.hourly:null,itemCount:DATA.items.length,items:DATA.items.map(i=>({key:i.key,name:i.name,minutes:i.minutes,quantity:i.quantity,calculatedUnitPrice:i.calculatedUnitPrice,unitPrice:i.unitPrice,total:i.total,basis:i.basis,customized:i.basis.includes('AJUSTADO')||i.basis==='VALOR PRÓPRIO'})),total:DATA.total,source:'FEITURA Gate 1.1 / revisão transitória',persistence:'local-download-only; future ingestion endpoint pending Gate 2'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=DATA.trackingId+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}recordButton?.addEventListener('click',downloadRecord);printButton?.addEventListener('click',()=>{downloadRecord();window.print();});
+</script></body></html>`;
+}
 
 function exportCatalog(root,state,format){
   markGenerated(root,state);
   const data = payload(state);
-  if(format === "json") return exportFile("feitura-orcamento.json",JSON.stringify(data,null,2),"application/json;charset=utf-8");
-  if(format === "html") return exportFile("feitura-orcamento.html",buildHtml(data),"text/html;charset=utf-8");
-  const lines = [["FEITURA: ORÇAMENTO / ROMANEIO"],["GERADO EM",data.generatedAt],["DE",data.from],["PARA",data.to],["REFERÊNCIA",data.pricingBasis === "hourly" ? "VALOR/HORA" : "VALOR PADRÃO"],["VALOR/HORA",data.hourly ? data.hourly.toFixed(2) : ""],[],["ITEM","TEMPO MIN.","VALOR UNIT.","QUANTIDADE","TOTAL"],...data.items.map(i=>[i.name,i.minutes.toFixed(2),i.unitPrice.toFixed(2),i.quantity,i.total.toFixed(2)]),[],["TOTAL","","","",data.total.toFixed(2)]];
-  exportFile("feitura-orcamento.csv","\uFEFF"+lines.map(row=>row.map(csv).join(";")).join("\n"),"text/csv;charset=utf-8");
+  if(format === "json") return exportFile(`${data.trackingId}.json`,JSON.stringify(data,null,2),"application/json;charset=utf-8");
+  if(format === "html") return exportFile(`suafeitura-${data.trackingId}.html`,buildHtml(data,false),"text/html;charset=utf-8");
+  const lines = [["FEITURA: ORÇAMENTO / ROMANEIO"],["RASTREABILIDADE",data.trackingId],["GERADO EM",data.generatedAt],["DE",data.from],["PARA",data.to],["REFERÊNCIA",data.pricingBasis === "hourly" ? "VALOR/HORA" : "VALOR PADRÃO"],["VALOR/HORA",data.hourly ? data.hourly.toFixed(2) : ""],[],["ITEM","TEMPO MIN.","VALOR UNIT.","QUANTIDADE","TOTAL"],...data.items.map(i=>[i.name,i.minutes.toFixed(2),i.unitPrice.toFixed(2),i.quantity,i.total.toFixed(2)]),[],["TOTAL","","","",data.total.toFixed(2)]];
+  exportFile(`${data.trackingId}.csv`,"\uFEFF"+lines.map(row=>row.map(csv).join(";")).join("\n"),"text/csv;charset=utf-8");
 }
 
-function buildHtml(data){
-  const option = (data.include || {});
-  const rows = data.items.map(i=>`<tr><td>${esc(i.name)}</td><td>${number(i.minutes)} MIN.</td><td>${i.unitPrice?money(i.unitPrice):"SEM VALOR"}</td><td>${number(i.quantity)}</td><td>${i.total?money(i.total):""}</td></tr>`).join("");
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>FEITURA: ORÇAMENTO / ROMANEIO</title><style>body{font-family:Arial,sans-serif;max-width:1100px;margin:36px auto;padding:0 24px;color:#202820}h1{font-weight:400}table{width:100%;border-collapse:collapse;margin-top:24px}th,td{padding:11px;border-bottom:1px solid #ccc;text-align:left}th{text-transform:uppercase;font-size:11px}.meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:20px 0}.meta strong{display:block;margin-top:5px}.total{margin-top:24px;font-size:20px;font-weight:bold}.romaneio{border-top:1px solid #ccc;margin-top:28px;padding-top:18px}</style></head><body><p>FEITURA®</p><h1>ORÇAMENTO / ROMANEIO</h1><div class="meta"><div>DE<strong>${esc(data.from || "")}</strong></div><div>PARA<strong>${esc(data.to || "")}</strong></div><div>DATA DA FEITURA<strong>${esc(data.generatedAt)}</strong></div></div>${option.contact ? `<p class="romaneio"><b>DADOS DE CONTATO E ENDEREÇO</b><br>______________________________________________</p>` : ""}${option.production ? `<p><b>SOLICITAÇÃO DE PRODUÇÃO</b><br>______________________________________________</p>` : ""}${option.deadline ? `<p><b>PRAZO VIGENTE</b><br>${esc(data.deadlineFrom || "____/____/________")} A ${esc(data.deadlineTo || "____/____/________")}</p>` : ""}${option.priceTable ? `<table><thead><tr><th>ITEM / SERVIÇO</th><th>TEMPO</th><th>VALOR UNIT.</th><th>QUANTIDADE</th><th>TOTAL</th></tr></thead><tbody>${rows || '<tr><td colspan="5">NENHUM ITEM.</td></tr>'}</tbody></table><div class="total">TOTAL: ${money(data.total)}</div>` : ""}<p class="romaneio">DOCUMENTO GERADO LOCALMENTE PELA FEITURA®. DADOS TÉCNICOS SÃO REFERÊNCIAS E DEVEM SER VALIDADOS NAS CONDIÇÕES REAIS DE PRODUÇÃO.</p></body></html>`;
+function openReview(root,state){
+  markGenerated(root,state);
+  const data=payload(state);
+  const html=buildHtml(data,true);
+  const blob=new Blob([html],{type:"text/html;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const win=window.open(url,"_blank","noopener,noreferrer");
+  if(!win){exportFile(`${data.trackingId}.html`,html,"text/html;charset=utf-8");return;}
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 
 function solveFormula(root){
@@ -180,16 +244,17 @@ export function initGlossary(){
     root.addEventListener("input",event=>{
       const t=event.target;
       if(t.matches("[data-glossary-search]")){renderGlossary(root,state);return;}
-      if(t.matches("[name=hourly]")){state.hourly=Number(t.value)||0;renderGlossary(root,state);renderResults(root,state);return;}
+      if(t.matches("[name=hourly]")){state.hourly=Number(t.value)||0;state.customPrices.clear();renderGlossary(root,state);renderResults(root,state);return;}
       if(t.matches("[data-document-from], [data-document-to]")){return;}
       if(t.matches("[data-formula-x], [data-formula-a], [data-formula-b], [data-formula-f]")){solveFormula(root);return;}
-      if(t.matches("[data-item-quantity]")){const key=t.dataset.itemQuantity; if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(1,Number(t.value)||1)}else state.quantities.set(key,Math.max(1,Number(t.value)||1)); renderResults(root,state);}
+      if(t.matches("[data-item-quantity]")){const key=t.dataset.itemQuantity; if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(1,Number(t.value)||1)}else state.quantities.set(key,Math.max(1,Number(t.value)||1)); renderResults(root,state);return;}
+      if(t.matches("[data-item-price]")){const key=t.dataset.itemPrice;const value=Number(t.value)||0;if(value>0)state.customPrices.set(key,value);else state.customPrices.delete(key);renderResults(root,state);renderGlossary(root,state);return;}
     });
     root.addEventListener("change",event=>{
       const t=event.target;
       if(t.matches("[data-glossary-filter]")){renderGlossary(root,state);return;}
       if(t.matches("input[name=pricingBasis]")){state.pricingBasis=t.value;renderGlossary(root,state);renderResults(root,state);return;}
-      if(t.matches("[data-glossary-check]")){const item=t.closest("[data-glossary-item]");if(!item)return;if(t.checked){state.selected.add(item.dataset.key);if(!state.quantities.has(item.dataset.key))state.quantities.set(item.dataset.key,1)}else{state.selected.delete(item.dataset.key);state.quantities.delete(item.dataset.key)}renderGlossary(root,state);renderResults(root,state);return;}
+      if(t.matches("[data-glossary-check]")){const item=t.closest("[data-glossary-item]");if(!item)return;if(t.checked){state.selected.add(item.dataset.key);if(!state.quantities.has(item.dataset.key))state.quantities.set(item.dataset.key,1)}else{state.selected.delete(item.dataset.key);state.quantities.delete(item.dataset.key);state.customPrices.delete(item.dataset.key)}renderGlossary(root,state);renderResults(root,state);return;}
       if(t.matches("[data-include-contact]"))state.include.contact=t.checked;
       if(t.matches("[data-include-price-table]"))state.include.priceTable=t.checked;
       if(t.matches("[data-include-production]"))state.include.production=t.checked;
@@ -199,9 +264,9 @@ export function initGlossary(){
     root.addEventListener("click",event=>{
       const detail=event.target.closest("[data-glossary-detail]"); if(detail){const panel=detail.closest("[data-glossary-item]")?.querySelector(".glossary-detail-panel");if(panel){const open=detail.getAttribute("aria-expanded")==="true";detail.setAttribute("aria-expanded",String(!open));panel.hidden=open}return;}
       if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
-      if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}
+      if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customPrices.clear();state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}
       const remove=event.target.closest("[data-remove-custom]"); if(remove){const index=Number(remove.dataset.removeCustom.split(":")[1]);if(Number.isInteger(index))state.customRows.splice(index,1);renderResults(root,state);return;}
-      if(event.target.closest("[data-print-catalog]")){markGenerated(root,state);renderResults(root,state);window.print();return;}
+      if(event.target.closest("[data-open-review]")){openReview(root,state);return;}
       if(event.target.closest("[data-export-catalog]")){exportCatalog(root,state,"csv");return;}
       if(event.target.closest("[data-export-json]")){exportCatalog(root,state,"json");return;}
       if(event.target.closest("[data-export-html]")){exportCatalog(root,state,"html");return;}
