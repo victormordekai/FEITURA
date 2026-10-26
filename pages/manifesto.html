@@ -50,20 +50,14 @@
     .manifesto-definition .term{font:500 .7rem "DM Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
     .manifesto-definition strong{display:block;margin-top:12px;font:400 clamp(1.5rem,3vw,2.5rem) "Libre Baskerville",serif;color:var(--olive-dark)}
     .manifesto-equation{padding:clamp(32px,5vw,70px);background:var(--olive-dark);color:var(--white);margin:35px 0 55px;text-align:center}
-    .manifesto-equation .formula{font:400 clamp(2rem,5vw,5rem) "DM Mono",monospace;letter-spacing:-.07em}
+    .manifesto-equation .formula{font:400 clamp(2rem,4vw,4.5rem) "DM Mono",monospace;letter-spacing:-.07em;white-space:nowrap}
     .manifesto-equation p{margin:20px auto 0;max-width:580px;color:rgba(251,250,246,.68);font-size:.82rem;line-height:1.7}
     .manifesto-sources{border-top:1px solid var(--line);padding-top:28px;margin-top:60px}
     .manifesto-sources ul{margin:18px 0 0;padding-left:20px}.manifesto-sources li{margin:8px 0;font-size:.8rem;line-height:1.6}.manifesto-sources a{color:var(--olive-dark)}
     .manifesto-return{display:inline-flex;margin-bottom:70px;font:600 .67rem "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
     @media(max-width:700px){.manifesto-grid{grid-template-columns:1fr}.manifesto-index{position:static}.manifesto-entry{padding-bottom:60px}.manifesto h1{font-size:clamp(3.2rem,18vw,6rem)}}
     @media print{.site-header,.footer{display:none}.manifesto{padding:30px}.manifesto-grid{grid-template-columns:1fr}.manifesto-index{position:static}}
-  
-    .manifesto-method-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);margin:35px 0 45px}
-    .manifesto-method-grid>div{padding:26px;background:var(--paper-deep)}
-    .manifesto-method-grid .term{font:500 .65rem "DM Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-    .manifesto-method-grid strong{display:block;margin-top:10px;font-family:"Libre Baskerville",serif;color:var(--olive-dark)}
-    @media(max-width:700px){.manifesto-method-grid{grid-template-columns:1fr}}
-    </style>
+  </style>
 </head>
 <body>
 <header class="site-header">
@@ -139,7 +133,19 @@
 <p>Não para romantizar o trabalho manual. Não para transformar ofício em nostalgia. Mas para tornar legível a estrutura que existe entre uma solicitação e uma peça pronta.</p>
 <p>Produto. Processo. Operação. Tempo. Capacidade. Quantidade. Valor.</p>
 </article>
-<article class="manifesto-entry"><h2>O orçamento pode explicar a si mesmo</h2><p>Uma peça isolada não produz a mesma economia que um lote. Um lote não exige apenas uma quantidade maior do mesmo trabalho. Ele altera a relação entre preparação, repetição, capacidade, restrição e custo de oportunidade.</p><p>Por isso, um orçamento pode ser mais do que um número final. Pode apresentar sua própria regra.</p><div class="manifesto-equation"><div class="formula">FEITURA(x) = ax + b</div><p><strong>x</strong> é a quantidade; <strong>a</strong> representa o componente variável do fazer em lote; <strong>b</strong> representa o componente fixo associado ao custo de oportunidade de realizar uma peça.</p></div><p>A expressão é simples de propósito. Ela não pretende esconder o valor atrás de uma tarifa que se modifica sem explicação. Ao contrário: pretende mostrar de onde o valor veio.</p><p>O orçamento pode dizer quanto custa. Mas também pode dizer<strong> por que custa.</strong></p><h3>Engenharia da cotação</h3><p>Uma referência pode nascer de um conhecimento já estruturado. Mas também pode ser construída a partir de um método.</p><p>Por isso, a FEITURA trabalha com duas entradas que podem coexistir: referências diretas, quando já existe um valor de referência para determinado item, e referências metodológicas, quando o valor precisa ser estimado a partir de uma forma explícita de cronoanálise.</p><p>O produto não precisa se transformar em uma nova referência para cada cálculo. Ele pode ser apenas a variável de uma metodologia: perímetro de costura, tempo de máquina, aproximação por pontos, tempo normal, tempo padrão ou outro método tecnicamente pertinente.</p><p>Assim, a engenharia da cotação segue uma sequência simples:</p><p><strong>produto → referência ou método → variáveis → cálculo → cotação.</strong></p><p>Quando as duas camadas existem para o mesmo produto, elas não competem entre si. Uma referência direta pode indicar, por exemplo, <strong>6,5 minutos</strong>; uma cronoanálise independente pode chegar a <strong>7,1 minutos</strong>. A diferença não determina automaticamente qual valor está correto. Ela cria uma informação que pode ser investigada: construção, material, máquina, operação, complexidade, condição de execução ou próprio método de estimativa.</p><p>É nessa diferença que uma cotação deixa de ser apenas uma precificação e passa a produzir conhecimento. A FEITURA pode comparar referências, testar métodos e qualificar uma decisão antes que o orçamento chegue ao cliente ou ao fornecedor.</p><p><strong>Estimar. Comparar. Validar. Produzir evidência.</strong></p><div class="manifesto-definition"><span class="term">duas camadas de referência</span><strong>Referência direta + método independente = cotação mais verificável.</strong></div></article>
+<article class="manifesto-entry">
+<h2>O orçamento pode explicar a si mesmo</h2>
+<p>Uma peça isolada não produz a mesma economia que um lote. Um lote não exige apenas uma quantidade maior do mesmo trabalho. Ele altera a relação entre preparação, repetição, capacidade, restrição e custo de oportunidade.</p>
+<p>Por isso, um orçamento pode ser mais do que um número final. Pode apresentar sua própria regra.</p>
+<div class="manifesto-equation">
+<div class="formula">FEITURA(x) = ax + b</div>
+<p><strong>x</strong> é a quantidade; <strong>a</strong> representa o componente variável do fazer em lote; <strong>b</strong> representa o componente fixo associado ao custo de oportunidade de realizar uma peça.</p>
+</div>
+<p>A expressão é simples de propósito. Ela não pretende esconder o valor atrás de uma tarifa que se modifica sem explicação. Ao contrário: pretende mostrar de onde o valor veio.</p>
+<p>O orçamento pode dizer quanto custa. Mas também pode dizer <strong>por que custa</strong>.</p>
+<p>Quando seus componentes são conhecidos, a própria função pode ser decomposta: a partir do valor final, encontrar a quantidade; a partir da quantidade, encontrar o componente variável; a partir da função, encontrar o custo fixo; ou simplesmente apresentar a relação que transforma trabalho em valor.</p>
+<p>Uma função de primeiro grau não é uma promessa de que o mundo produtivo seja simples. É uma forma de declarar que a regra utilizada para calcular pode ser vista, discutida, medida e contestada.</p>
+</article>
 <article class="manifesto-entry">
 <h2>FEITURA</h2>
 <p>Talvez por isso a palavra tenha permanecido.</p>
@@ -161,7 +167,7 @@
 </div>
 </div>
 </main>
-<div data-footer=""></div>
+<div data-footer></div>
 <script src="../js/main.js" type="module"></script>
 </body>
 </html>
