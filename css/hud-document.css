@@ -15,11 +15,6 @@
   pointer-events:auto;
   transition:opacity .24s ease,transform .24s ease;
 }
-.hud-document-actions[aria-hidden="true"]{
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-}
 .hud-document-actions.is-floating{
   animation:hud-document-tap 3.8s ease-in-out infinite;
 }
