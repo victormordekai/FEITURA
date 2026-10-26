@@ -1,0 +1,85 @@
+/* FEITURA / DOCUMENT HUD
+   Ação primária de revisão: flutua enquanto a seção final está fora da viewport
+   e retorna ao fluxo normal quando o ponto de validação chega à tela. */
+.hud-document-anchor{
+  min-height:58px;
+  margin-top:28px;
+}
+.hud-document-actions{
+  position:fixed;
+  z-index:40;
+  right:24px;
+  bottom:24px;
+  display:flex;
+  align-items:center;
+  pointer-events:auto;
+  transition:opacity .24s ease,transform .24s ease;
+}
+.hud-document-actions[aria-hidden="true"]{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.hud-document-actions.is-floating{
+  animation:hud-document-tap 3.8s ease-in-out infinite;
+}
+.hud-document-actions.is-docked{
+  position:static;
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  animation:none;
+}
+.button-hud{
+  appearance:none;
+  border:1px solid rgba(251,250,246,.22);
+  background:var(--olive-dark);
+  color:var(--white);
+  min-height:48px;
+  padding:0 18px;
+  box-shadow:0 10px 28px rgba(37,45,37,.18);
+  font:600 .65rem "DM Mono",monospace;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.button-hud:hover,
+.button-hud:focus-visible{
+  background:var(--olive);
+  color:var(--white);
+}
+.button-hud:focus-visible{
+  outline:2px solid var(--white);
+  outline-offset:3px;
+}
+.document-actions-secondary{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:18px;
+  padding-top:18px;
+}
+.document-actions-secondary .button-dark{
+  background:var(--olive-dark);
+  color:var(--white);
+}
+@keyframes hud-document-tap{
+  0%,72%,100%{transform:translate3d(0,0,0) rotate(0)}
+  75%{transform:translate3d(0,-1px,0) rotate(-.25deg)}
+  78%{transform:translate3d(1px,0,0) rotate(.25deg)}
+  81%{transform:translate3d(-1px,0,0) rotate(-.18deg)}
+  84%{transform:translate3d(0,0,0) rotate(0)}
+}
+@media(max-width:600px){
+  .hud-document-actions{right:14px;bottom:14px;left:14px;justify-content:flex-end}
+  .button-hud{max-width:calc(100vw - 28px);min-height:46px;padding:0 14px}
+  .document-actions-secondary{align-items:stretch;flex-direction:column}
+  .document-actions-secondary>*{width:100%;text-align:left}
+}
+@media(prefers-reduced-motion:reduce){
+  .hud-document-actions.is-floating{animation:none}
+  .hud-document-actions{transition:none}
+}
+@media print{
+  .hud-document-anchor,.document-actions-secondary{display:none!important}
+}

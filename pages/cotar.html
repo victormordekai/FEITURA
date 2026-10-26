@@ -204,8 +204,10 @@
   >
   
   <link rel="stylesheet" href="../css/symbol.css">
-  
-  <link rel="stylesheet" href="../css/testify.css">  
+
+  <link rel="stylesheet" href="../css/testify.css">
+
+  <link rel="stylesheet" href="../css/hud-document.css">
   
 </head>
 
@@ -391,7 +393,6 @@
                 <option value="operations">Operações</option>
                 <option value="repairs">Consertos e serviços</option>
                 <option value="methods">Método de cronoanálise</option>
-                <option value="sources">Fontes e referências</option>
               </select>
             </label>
             <div class="glossary-tools">
@@ -407,6 +408,8 @@
           </div>
 
           <div class="glossary-list" data-glossary-list></div>
+
+          <section class="database-reference-card" data-reference-card aria-labelledby="database-reference-title"></section>
 
           <div class="glossary-method">
             <div>
@@ -458,8 +461,12 @@
             </div>
             <p>A FEITURA monta uma versão transitória, não editável, para leitura e concordância. A impressão só é liberada nessa revisão.</p>
           </div>
-          <div class="document-actions">
-            <button type="button" class="button button-dark" data-open-review>REVISAR E VALIDAR ROMANEIO</button>
+          <div class="hud-document-anchor" data-document-hud-anchor>
+            <div class="hud-document-actions" data-document-hud aria-hidden="true">
+              <button type="button" class="button-hud button-dark" data-open-review>REVISAR E VALIDAR ROMANEIO</button>
+            </div>
+          </div>
+          <div class="document-actions-secondary">
             <button type="button" class="button button-dark" data-export-catalog>BAIXAR CSV</button>
             <button type="button" class="text-button" data-export-json>BAIXAR JSON</button>
             <button type="button" class="text-button" data-export-html>BAIXAR DOCUMENTO HTML</button>

@@ -11,10 +11,10 @@ const records = () => [
   ...glossaryData.models.map(item => ({ ...item, key:`model:${item.name}`, label:item.name, group:"models", groupLabel:"Artigos e modelos", category:item.material_family || "Artigo", quoteable:true })),
   ...glossaryData.operations.map(item => ({ ...item, key:`operation:${item.id}`, label:item.name, group:"operations", groupLabel:"Operações", category:item.category || "Operação", quoteable:true })),
   ...glossaryData.repairs.filter(item => item.active !== false).map(item => ({ ...item, key:`repair:${item.id}`, label:item.name, group:"repairs", groupLabel:"Consertos e serviços", category:"Conserto", quoteable:true })),
-  ...glossaryData.methods.map((item,index) => ({ ...item, key:`method:${index}`, label:item.term, group:"methods", groupLabel:"Método de cronoanálise", category:"Método", quoteable:false })),
-  ...glossaryData.sources.map((item,index) => ({ ...item, key:`source:${index}`, label:item.name, group:"sources", groupLabel:"Fontes e referências", category:item.type || "Fonte", quoteable:false }))
+  ...glossaryData.methods.map((item,index) => ({ ...item, key:`method:${index}`, label:item.term, group:"methods", groupLabel:"Método de cronoanálise", category:"Método", quoteable:false }))
 ];
 
+const referenceRecords = () => glossaryData.sources.map((item,index) => ({ ...item, key:`source:${index}` }));
 const quoteableRecords = () => records().filter(item => item.quoteable);
 const minutesFor = item => {
   const avg = Number(item.avg);
@@ -87,12 +87,47 @@ function renderRecord(item,state){
   </article>`;
 }
 
+function renderReferences(root){
+  const card=root.querySelector("[data-reference-card]");
+  if(!card) return;
+  const groups=new Map();
+  referenceRecords().forEach(item=>{
+    const type=item.type || "Referência";
+    if(!groups.has(type)) groups.set(type,[]);
+    groups.get(type).push(item);
+  });
+  const count=referenceRecords().length;
+  const groupsHtml=[...groups.entries()].map(([type,items])=>`
+    <section class="database-reference-group">
+      <div class="database-reference-group-head"><span class="mono">${esc(type)}</span><strong>${items.length} ${items.length===1 ? "REFERÊNCIA" : "REFERÊNCIAS"}</strong></div>
+      <div class="database-reference-list">
+        ${items.map(item=>`<article class="database-reference-item">
+          <h4>${esc(item.name)}</h4>
+          <p>${esc(item.limitation || "Referência utilizada para contextualização e estruturação do banco de dados público.")}</p>
+          <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">ABRIR FONTE ↗</a>
+        </article>`).join("")}
+      </div>
+    </section>`).join("");
+  card.innerHTML=`
+    <div class="database-reference-head">
+      <div>
+        <span class="kicker">Banco de dados FEITURA</span>
+        <h3 id="database-reference-title">REFERÊNCIAS DO BANCO DE DADOS</h3>
+        <p>Estas são as referências bibliográficas, técnicas, acadêmicas e visuais utilizadas para contextualizar e organizar a base pública da FEITURA. A existência de uma referência no banco não significa que cada valor, tempo ou parâmetro publicado derive diretamente dela; cada registro conserva sua própria natureza e limitação metodológica.</p>
+      </div>
+      <div class="database-reference-summary"><strong>${count}</strong><span>REFERÊNCIAS INDEXADAS</span></div>
+    </div>
+    <button type="button" class="glossary-detail database-reference-toggle" data-reference-details aria-expanded="false">DETALHES</button>
+    <div class="database-reference-panel" data-reference-panel hidden>${groupsHtml}</div>`;
+}
+
 function renderGlossary(root,state){
   const list = root.querySelector("[data-glossary-list]");
   if(!list) return;
   const visible = filteredRecords(root);
   list.innerHTML = visible.length ? visible.map(item => renderRecord(item,state)).join("") : `<div class="empty-state">NENHUM REGISTRO ENCONTRADO.</div>`;
   root.querySelector("[data-base-count]")?.replaceChildren(document.createTextNode(`${records().length} REGISTROS`));
+  renderReferences(root);
 }
 
 function selectedItems(state){ return quoteableRecords().filter(item => state.selected.has(item.key)); }
@@ -262,6 +297,7 @@ export function initGlossary(){
       if(t.matches("[data-formula-unknown]"))solveFormula(root);
     });
     root.addEventListener("click",event=>{
+      const referenceDetail=event.target.closest("[data-reference-details]"); if(referenceDetail){const panel=root.querySelector("[data-reference-panel]");if(panel){const open=referenceDetail.getAttribute("aria-expanded")==="true";referenceDetail.setAttribute("aria-expanded",String(!open));panel.hidden=open;}return;}
       const detail=event.target.closest("[data-glossary-detail]"); if(detail){const panel=detail.closest("[data-glossary-item]")?.querySelector(".glossary-detail-panel");if(panel){const open=detail.getAttribute("aria-expanded")==="true";detail.setAttribute("aria-expanded",String(!open));panel.hidden=open}return;}
       if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
       if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customPrices.clear();state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}

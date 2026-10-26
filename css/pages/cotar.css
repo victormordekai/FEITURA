@@ -106,3 +106,115 @@ input[type="text"],input[type="search"],textarea{text-transform:uppercase}.gloss
 .quote-finalization .text-button:hover{color:var(--white)}
 @media(max-width:900px){.quote-finalization-head{grid-template-columns:1fr}}
 @media(max-width:600px){.quote-finalization{padding-left:18px;padding-right:18px}.quote-finalization .document-actions{align-items:stretch;flex-direction:column}.quote-finalization .document-actions>*{width:100%;text-align:left}.quote-unit-price{width:100%}}
+
+/* GATE 1.1 / REFERÊNCIAS AGRUPADAS DO BANCO PÚBLICO */
+.database-reference-card{
+  margin-top:1px;
+  border:1px solid var(--line);
+  background:var(--white);
+  padding:clamp(24px,3vw,38px);
+}
+.database-reference-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:28px;
+  align-items:end;
+}
+.database-reference-head h3{
+  margin:8px 0 12px;
+  font:400 clamp(1.35rem,2.4vw,2.15rem) "Libre Baskerville",serif;
+  letter-spacing:-.035em;
+}
+.database-reference-head p{
+  max-width:78ch;
+  margin:0;
+  color:var(--muted);
+  font-size:.76rem;
+  line-height:1.7;
+}
+.database-reference-summary{
+  min-width:150px;
+  padding:14px 16px;
+  background:var(--paper-deep);
+  color:var(--olive-dark);
+  text-align:right;
+}
+.database-reference-summary strong{
+  display:block;
+  font:400 1.75rem "Libre Baskerville",serif;
+}
+.database-reference-summary span{
+  display:block;
+  margin-top:4px;
+  font:600 .52rem "DM Mono",monospace;
+  letter-spacing:.06em;
+}
+.database-reference-toggle{
+  display:inline-block;
+  margin-top:24px;
+}
+.database-reference-panel{
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid var(--line);
+}
+.database-reference-group + .database-reference-group{
+  margin-top:28px;
+  padding-top:28px;
+  border-top:1px solid var(--line);
+}
+.database-reference-group-head{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:baseline;
+  margin-bottom:10px;
+}
+.database-reference-group-head .mono{
+  color:var(--olive-dark);
+  font-size:.6rem;
+  text-transform:uppercase;
+}
+.database-reference-group-head strong{
+  color:var(--muted);
+  font:500 .56rem "DM Mono",monospace;
+}
+.database-reference-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+}
+.database-reference-item{
+  min-width:0;
+  padding:18px;
+  background:var(--paper);
+}
+.database-reference-item h4{
+  margin:0;
+  font-size:.86rem;
+  line-height:1.35;
+}
+.database-reference-item p{
+  margin:9px 0 13px;
+  color:var(--muted);
+  font-size:.68rem;
+  line-height:1.55;
+}
+.database-reference-item a{
+  color:var(--olive-dark);
+  font:600 .55rem "DM Mono",monospace;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+@media(max-width:900px){
+  .database-reference-head{grid-template-columns:1fr}
+  .database-reference-summary{width:max-content;text-align:left}
+  .database-reference-list{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .database-reference-card{padding:20px}
+  .database-reference-group-head{display:block}
+  .database-reference-group-head strong{display:block;margin-top:6px}
+}

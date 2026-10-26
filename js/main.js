@@ -6,6 +6,7 @@ import {initCapacity} from "./modules/capacity.js";
 import {initDemoActions} from "./modules/demo.js";
 import {initGlossary} from "./modules/glossary.js";
 import {initVisitorCounter} from "./modules/counter.js";
+import {initDocumentHud} from "./modules/hud-document.js";
 
 document.addEventListener("DOMContentLoaded",()=>{
   initNavigation();
@@ -16,4 +17,5 @@ document.addEventListener("DOMContentLoaded",()=>{
   initDemoActions();
   initGlossary();
   initVisitorCounter();
+  initDocumentHud();
 });
