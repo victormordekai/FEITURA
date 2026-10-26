@@ -11,7 +11,8 @@ const records = () => [
   ...glossaryData.models.map(item => ({ ...item, key:`model:${item.name}`, label:item.name, group:"models", groupLabel:"Artigos e modelos", category:item.material_family || "Artigo", quoteable:true })),
   ...glossaryData.operations.map(item => ({ ...item, key:`operation:${item.id}`, label:item.name, group:"operations", groupLabel:"Operações", category:item.category || "Operação", quoteable:true })),
   ...glossaryData.repairs.filter(item => item.active !== false).map(item => ({ ...item, key:`repair:${item.id}`, label:item.name, group:"repairs", groupLabel:"Consertos e serviços", category:"Conserto", quoteable:true })),
-  ...glossaryData.methods.map((item,index) => ({ ...item, key:`method:${index}`, label:item.term, group:"methods", groupLabel:"Método de cronoanálise", category:"Método", quoteable:false }))
+  ...glossaryData.methods.map((item,index) => ({ ...item, key:`method:${index}`, label:item.term, group:"methods", groupLabel:"Método de cronoanálise", category:"Método", quoteable:false })),
+  ...glossaryData.specialReferences.map(item => ({ ...item, key:`special:${item.id}`, label:item.name, group:"specialRefs", groupLabel:"Referências especiais", category:item.category || "Produto especial", quoteable:false, specialReference:true }))
 ];
 
 const referenceRecords = () => glossaryData.sources.map((item,index) => ({ ...item, key:`source:${index}` }));
@@ -62,6 +63,21 @@ function pricingText(item,state){
   if(Number(custom) > 0) return `${money(custom)} AJUSTADO`;
   const calculated = calculatedPrice(item,state);
   return calculated > 0 ? money(calculated) : "DEFINA O VALOR/HORA";
+}
+
+function specialReferenceRecords(){ return (glossaryData.specialReferences || []).map(item => ({ ...item, key:`special:${item.id}`, label:item.name, group:"specialRefs", groupLabel:"Referências especiais", category:item.category || "Produto especial", quoteable:false, specialReference:true })); }
+
+function renderSpecialReference(item){
+  return `<article class="glossary-item is-reference special-reference" data-glossary-item data-key="${esc(item.key)}">
+    <span class="glossary-reference-mark mono">REF.</span>
+    <div class="glossary-item-main">
+      <div class="glossary-item-top"><span class="mono">${esc(item.groupLabel)}</span><span class="glossary-category">${esc(item.category || "")}</span></div>
+      <h3>${esc(item.label)}</h3>
+      <p>${esc(item.notes || "Referência especial para estruturar produtos fora do conjunto principal da base.")}</p>
+      <div class="glossary-meta"><span><b>${item.variables.length}</b> VARIÁVEIS ESPECÍFICAS</span><span><b>CONFIGURÁVEL</b> PARA COTAÇÃO</span></div>
+    </div>
+    <button type="button" class="glossary-detail" data-special-ref="${esc(item.id)}" aria-haspopup="dialog">CONFIGURAR REF.</button>
+  </article>`;
 }
 
 function renderRecord(item,state){
@@ -125,9 +141,65 @@ function renderGlossary(root,state){
   const list = root.querySelector("[data-glossary-list]");
   if(!list) return;
   const visible = filteredRecords(root);
-  list.innerHTML = visible.length ? visible.map(item => renderRecord(item,state)).join("") : `<div class="empty-state">NENHUM REGISTRO ENCONTRADO.</div>`;
-  root.querySelector("[data-base-count]")?.replaceChildren(document.createTextNode(`${records().length} REGISTROS`));
+  list.innerHTML = visible.length ? visible.map(item => item.specialReference ? renderSpecialReference(item) : renderRecord(item,state)).join("") : `<div class="empty-state">NENHUM REGISTRO ENCONTRADO.</div>`;
+  root.querySelector("[data-base-count]")?.replaceChildren(document.createTextNode(`${records().length} REGISTROS + ${specialReferenceRecords().length} REFS.`));
   renderReferences(root);
+}
+
+function renderSpecialReferenceModal(root){
+  let modal=root.querySelector("[data-special-ref-modal]");
+  if(modal) return modal;
+  modal=document.createElement("div");
+  modal.className="special-ref-modal";
+  modal.dataset.specialRefModal="";
+  modal.hidden=true;
+  modal.innerHTML=`<div class="special-ref-backdrop" data-special-ref-close></div><section class="special-ref-dialog" role="dialog" aria-modal="true" aria-labelledby="special-ref-title"><button type="button" class="special-ref-close" data-special-ref-close aria-label="Fechar">FECHAR</button><div class="section-index mono">REF. / CONFIGURAÇÃO ESPECIAL</div><p class="kicker">Produto fora da base principal</p><h2 id="special-ref-title" data-special-ref-title>Referência especial</h2><p class="special-ref-description" data-special-ref-description></p><form class="special-ref-form" data-special-ref-form></form><div class="special-ref-actions"><button type="button" class="button button-dark" data-special-ref-add>ADICIONAR À COTAÇÃO</button><button type="button" class="text-button" data-special-ref-close>CANCELAR</button></div></section>`;
+  root.appendChild(modal);
+  return modal;
+}
+
+function openSpecialReference(root,state,id){
+  const item=specialReferenceRecords().find(ref=>ref.id===id);
+  if(!item) return;
+  const modal=renderSpecialReferenceModal(root);
+  modal._reference=item;
+  const title=modal.querySelector("[data-special-ref-title]");
+  const description=modal.querySelector("[data-special-ref-description]");
+  const form=modal.querySelector("[data-special-ref-form]");
+  title.textContent=item.name;
+  description.textContent=`${item.notes} As variáveis abaixo entram na identificação da REF. no romaneio. O tempo e o valor permanecem campos de cotação, não estimativas universais.`;
+  form.innerHTML=`${item.variables.map(variable=>{
+    if(variable.type==="select") return `<label><span>${esc(variable.label)}</span><select name="${esc(variable.key)}"><option value="">Não definido</option>${variable.options.map(option=>`<option value="${esc(option)}">${esc(option)}</option>`).join("")}</select></label>`;
+    return `<label><span>${esc(variable.label)}${variable.unit ? ` <small>${esc(variable.unit)}</small>` : ""}</span><input name="${esc(variable.key)}" type="${variable.type === "number" ? "number" : "text"}" ${variable.type === "number" ? 'min="0" step="0.01"' : ''} placeholder="${esc(variable.placeholder || "")}"></label>`;
+  }).join("")}<div class="special-ref-quote-fields"><label><span>Tempo técnico de referência <small>MIN./UN.</small></span><input name="__minutes" type="number" min="0" step="0.01" placeholder="Informe se houver referência"></label><label><span>Valor unitário próprio <small>R$</small></span><input name="__price" type="number" min="0" step="0.01" placeholder="Opcional"></label><label><span>Quantidade <small>UN.</small></span><input name="__quantity" type="number" min="1" step="1" value="1"></label></div>`;
+  modal.hidden=false;
+  requestAnimationFrame(()=>modal.classList.add("is-open"));
+  form.querySelector("input,select")?.focus();
+}
+
+function closeSpecialReference(root){
+  const modal=root.querySelector("[data-special-ref-modal]");
+  if(!modal) return;
+  modal.classList.remove("is-open");
+  setTimeout(()=>{modal.hidden=true;},180);
+}
+
+function addSpecialReference(root,state){
+  const modal=root.querySelector("[data-special-ref-modal]");
+  const item=modal?._reference;
+  const form=modal?.querySelector("[data-special-ref-form]");
+  if(!item || !form) return;
+  const values={};
+  item.variables.forEach(variable=>{ values[variable.key]=form.elements[variable.key]?.value?.trim() || ""; });
+  const minutes=Math.max(0,Number(form.elements.__minutes?.value)||0);
+  const price=Math.max(0,Number(form.elements.__price?.value)||0);
+  const quantity=Math.max(1,Number(form.elements.__quantity?.value)||1);
+  const summary=item.variables.map(variable=>values[variable.key] ? `${variable.label}: ${values[variable.key]}${variable.unit ? ` ${variable.unit}` : ""}` : "").filter(Boolean).join(" · ");
+  const name=`REF. ${item.name}${summary ? ` | ${summary}` : ""}`;
+  state.customRows.push({name,minutes,price,quantity,referenceId:item.id,referenceName:item.name,variables:values});
+  closeSpecialReference(root);
+  renderResults(root,state);
+  root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function selectedItems(state){ return quoteableRecords().filter(item => state.selected.has(item.key)); }
@@ -156,7 +228,7 @@ function calculate(state){
     const minutes = Math.max(0,Number(row.minutes)||0);
     const calculatedUnitPrice = state.hourly>0 ? minutes/60*state.hourly : 0;
     const unitPrice = Number(row.price)>0 ? Number(row.price) : calculatedUnitPrice;
-    return {key:`custom:${index}`,item:{label:row.name,type:"custom"},minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis:Number(row.price)>0?"VALOR PRÓPRIO":"VALOR/HORA"};
+    return {key:`custom:${index}`,item:{label:row.name,type:row.referenceId ? "special-reference" : "custom",referenceId:row.referenceId || "",variables:row.variables || {}},minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis:Number(row.price)>0?"VALOR PRÓPRIO":"VALOR/HORA"};
   });
   return [...rows,...custom];
 }
@@ -173,10 +245,10 @@ function renderResults(root,state){
   table.innerHTML = rows.length ? rows.map(row=>`<tr data-quote-row="${esc(row.key)}">
     <td><strong>${esc(row.item.label)}</strong><small>${esc(row.basis)}</small></td>
     <td>${number(row.minutes)} MIN.</td>
-    <td>${state.pricingBasis === "hourly" && row.item.type !== "custom" ? `<div class="quote-price-editor"><input class="quote-unit-price" type="number" min="0" step="0.01" value="${Number(row.unitPrice||0).toFixed(2)}" data-item-price="${esc(row.key)}" aria-label="Valor unitário de ${esc(row.item.label)}"><small>${row.calculatedUnitPrice>0 && Math.abs(row.unitPrice-row.calculatedUnitPrice)>0.005 ? `CALC.: ${money(row.calculatedUnitPrice)}` : "EDITÁVEL"}</small></div>` : (row.unitPrice>0 ? money(row.unitPrice) : "SEM VALOR")}</td>
+    <td>${state.pricingBasis === "hourly" && row.item.type !== "custom" && row.item.type !== "special-reference" ? `<div class="quote-price-editor"><input class="quote-unit-price" type="number" min="0" step="0.01" value="${Number(row.unitPrice||0).toFixed(2)}" data-item-price="${esc(row.key)}" aria-label="Valor unitário de ${esc(row.item.label)}"><small>${row.calculatedUnitPrice>0 && Math.abs(row.unitPrice-row.calculatedUnitPrice)>0.005 ? `CALC.: ${money(row.calculatedUnitPrice)}` : "EDITÁVEL"}</small></div>` : (row.unitPrice>0 ? money(row.unitPrice) : "SEM VALOR")}</td>
     <td><input class="quote-quantity" type="number" min="1" step="1" value="${row.quantity}" data-item-quantity="${esc(row.key)}" aria-label="Quantidade de ${esc(row.item.label)}"></td>
     <td>${row.total>0 ? money(row.total) : ""}</td>
-    <td>${row.item.type === "custom" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
+    <td>${row.item.type === "custom" || row.item.type === "special-reference" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
   </tr>`).join("") : `<tr><td colspan="6" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr>`;
 }
 
@@ -215,7 +287,7 @@ function payload(state){
     pricingBasis:state.pricingBasis,
     hourly:Number(state.hourly)||0,
     include:{...state.include},
-    items:rows.map(row=>({key:row.key,name:row.item.label,minutes:row.minutes,quantity:row.quantity,calculatedUnitPrice:row.calculatedUnitPrice||0,unitPrice:row.unitPrice,total:row.total,basis:row.basis})),
+    items:rows.map(row=>({key:row.key,name:row.item.label,minutes:row.minutes,quantity:row.quantity,calculatedUnitPrice:row.calculatedUnitPrice||0,unitPrice:row.unitPrice,total:row.total,basis:row.basis,referenceId:row.item.referenceId||null,variables:row.item.variables||null})),
     total:rows.reduce((sum,row)=>sum+row.total,0)
   };
   data.trackingId=trackingId(data);
@@ -298,6 +370,9 @@ export function initGlossary(){
     });
     root.addEventListener("click",event=>{
       const referenceDetail=event.target.closest("[data-reference-details]"); if(referenceDetail){const panel=root.querySelector("[data-reference-panel]");if(panel){const open=referenceDetail.getAttribute("aria-expanded")==="true";referenceDetail.setAttribute("aria-expanded",String(!open));panel.hidden=open;}return;}
+      const specialRef=event.target.closest("[data-special-ref]"); if(specialRef){openSpecialReference(root,state,specialRef.dataset.specialRef);return;}
+      if(event.target.closest("[data-special-ref-close]")){closeSpecialReference(root);return;}
+      if(event.target.closest("[data-special-ref-add]")){addSpecialReference(root,state);return;}
       const detail=event.target.closest("[data-glossary-detail]"); if(detail){const panel=detail.closest("[data-glossary-item]")?.querySelector(".glossary-detail-panel");if(panel){const open=detail.getAttribute("aria-expanded")==="true";detail.setAttribute("aria-expanded",String(!open));panel.hidden=open}return;}
       if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
       if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customPrices.clear();state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}
