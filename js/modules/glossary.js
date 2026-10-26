@@ -259,6 +259,19 @@ function openMethodReference(root,state,key){
 
 function closeMethodReference(root){const modal=root.querySelector("[data-method-ref-modal]");if(!modal)return;modal.classList.remove("is-open");setTimeout(()=>{modal.hidden=true;},180);}
 
+function focusQuoteDocument(root){
+  const section=root.querySelector(".quote-document");
+  if(!section) return;
+  section.classList.add("is-preediting");
+  requestAnimationFrame(()=>{
+    section.scrollIntoView({behavior:"smooth",block:"start"});
+    requestAnimationFrame(()=>{
+      const firstEditable=section.querySelector("[data-item-quantity], [data-item-cost], [data-item-price]");
+      firstEditable?.focus({preventScroll:true});
+    });
+  });
+}
+
 function addMethodReference(root,state){
   const modal=root.querySelector("[data-method-ref-modal]"), item=modal?._method, values=modal?._values||{}, minutes=Number(modal?._minutes)||0;
   if(!item)return;
@@ -266,7 +279,7 @@ function addMethodReference(root,state){
   const summary=schema.filter(f=>!['product','quantity'].includes(f.key)).map(f=>values[f.key] ? `${f.label}: ${values[f.key]}${f.unit?` ${f.unit}`:""}` : "").filter(Boolean).join(" · ");
   const name=`${product} | ${item.term}${summary?` | ${summary}`:""}`;
   state.customRows.push({name,minutes,price,quantity,methodReference:true,referenceId:`method:${item.term}`,referenceName:item.term,variables:values});
-  closeMethodReference(root); renderResults(root,state); root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});
+  closeMethodReference(root); renderResults(root,state); focusQuoteDocument(root);
 }
 
 function selectedItems(state){ return quoteableRecords().filter(item => state.selected.has(item.key)); }
@@ -456,7 +469,7 @@ export function initGlossary(){
       const t=event.target;
       if(t.matches("[data-glossary-filter]")){renderGlossary(root,state);return;}
       if(t.matches("input[name=pricingBasis]")){state.pricingBasis=t.value;renderGlossary(root,state);renderResults(root,state);return;}
-      if(t.matches("[data-glossary-check]")){const item=t.closest("[data-glossary-item]");if(!item)return;if(t.checked){state.selected.add(item.dataset.key);if(!state.quantities.has(item.dataset.key))state.quantities.set(item.dataset.key,1)}else{state.selected.delete(item.dataset.key);state.quantities.delete(item.dataset.key);state.customPrices.delete(item.dataset.key)}renderGlossary(root,state);renderResults(root,state);return;}
+      if(t.matches("[data-glossary-check]")){const item=t.closest("[data-glossary-item]");if(!item)return;if(t.checked){state.selected.add(item.dataset.key);if(!state.quantities.has(item.dataset.key))state.quantities.set(item.dataset.key,1)}else{state.selected.delete(item.dataset.key);state.quantities.delete(item.dataset.key);state.customPrices.delete(item.dataset.key);state.itemCosts.delete(item.dataset.key)}renderGlossary(root,state);renderResults(root,state);if(t.checked)focusQuoteDocument(root);return;}
       if(t.matches("[data-include-contact]"))state.include.contact=t.checked;
       if(t.matches("[data-include-price-table]"))state.include.priceTable=t.checked;
       if(t.matches("[data-include-production]"))state.include.production=t.checked;
@@ -469,7 +482,7 @@ export function initGlossary(){
       if(event.target.closest("[data-method-ref-close]")){closeMethodReference(root);return;}
       if(event.target.closest("[data-method-ref-add]")){addMethodReference(root,state);return;}
       const detail=event.target.closest("[data-glossary-detail]"); if(detail){const panel=detail.closest("[data-glossary-item]")?.querySelector(".glossary-detail-panel");if(panel){const open=detail.getAttribute("aria-expanded")==="true";detail.setAttribute("aria-expanded",String(!open));panel.hidden=open}return;}
-      if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
+      if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);focusQuoteDocument(root);return;}
       if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customPrices.clear();state.itemCosts.clear();state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}
       const remove=event.target.closest("[data-remove-custom]"); if(remove){const index=Number(remove.dataset.removeCustom.split(":")[1]);if(Number.isInteger(index))state.customRows.splice(index,1);renderResults(root,state);return;}
       if(event.target.closest("[data-open-review]")){openReview(root,state);return;}
