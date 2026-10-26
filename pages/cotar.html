@@ -204,10 +204,8 @@
   >
   
   <link rel="stylesheet" href="../css/symbol.css">
-
-  <link rel="stylesheet" href="../css/testify.css">
-
-  <link rel="stylesheet" href="../css/hud-document.css">
+  
+  <link rel="stylesheet" href="../css/testify.css">  
   
 </head>
 
@@ -351,19 +349,23 @@
 
           <div class="quote-document-table-wrap">
             <table class="quote-document-table">
-              <thead><tr><th>ITEM / SERVIÇO</th><th>PROCESSOS</th><th>MÁQUINAS</th><th>TEMPO</th><th>VALOR UNIT.</th><th>QUANTIDADE</th><th>CUSTOS</th><th>TOTAL</th><th></th></tr></thead>
-              <tbody data-catalog-table><tr><td colspan="9" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr></tbody>
+              <thead><tr><th>ITEM / SERVIÇO</th><th>TEMPO</th><th>VALOR UNIT.</th><th>QUANTIDADE</th><th>TOTAL</th><th></th></tr></thead>
+              <tbody data-catalog-table><tr><td colspan="6" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr></tbody>
             </table>
           </div>
 
           <div class="document-summary">
             <div><span>ITENS</span><strong data-catalog-count>0</strong></div>
             <div><span>TEMPO TOTAL</span><strong data-catalog-hours>0H</strong></div>
-            <div><span>CUSTOS</span><strong data-catalog-costs>R$ 0,00</strong></div>
             <div><span>TOTAL</span><strong data-catalog-total>R$ 0,00</strong></div>
           </div>
 
-
+          <div class="document-actions">
+            <button type="button" class="button button-dark" data-print-catalog>GERAR / IMPRIMIR PDF</button>
+            <button type="button" class="button button-paper" data-export-catalog>BAIXAR CSV</button>
+            <button type="button" class="text-button" data-export-json>BAIXAR JSON</button>
+            <button type="button" class="text-button" data-export-html>BAIXAR DOCUMENTO HTML</button>
+          </div>
         </section>
 
         <section class="database-workspace" aria-labelledby="database-title">
@@ -372,7 +374,7 @@
               <div class="section-index mono">03 / COTAR TABELA DE CUSTOS PELO BANCO DE DADOS FEITURA</div>
               <h2 id="database-title">Escolha a referência de valor e filtre a base.</h2>
             </div>
-            <p>O banco FEITURA reúne referências diretas e referências metodológicas. Itens e serviços podem ser adicionados diretamente; métodos de cronoanálise abrem uma configuração própria antes de entrar no mesmo romaneio. Quando ambos forem utilizados, o documento os organiza em blocos condicionais, sem exibir grupos vazios.</p>
+            <p>O banco é consultado como conjunto. Use o filtro para exibir um grupo e cote os registros exibidos de uma vez. A quantidade será definida depois, item a item, no documento.</p>
           </div>
 
           <fieldset class="pricing-reference">
@@ -384,7 +386,7 @@
           <div class="glossary-toolbar">
             <label class="glossary-search">
               <span class="mono">BUSCAR</span>
-              <input type="search" data-glossary-search placeholder="PRODUTO, OPERAÇÃO, COMPONENTE, MÉTODO...">
+              <input type="search" data-glossary-search placeholder="PRODUTO, OPERAÇÃO, COMPONENTE, ACABAMENTO...">
             </label>
             <label>
               <span class="mono">GRUPO</span>
@@ -394,7 +396,8 @@
                 <option value="operations">Operações</option>
                 <option value="repairs">Consertos e serviços</option>
                 <option value="methods">Método de cronoanálise</option>
-                              </select>
+                <option value="sources">Fontes e referências</option>
+              </select>
             </label>
             <div class="glossary-tools">
               <button type="button" class="button button-dark" data-quote-visible>COTAR REGISTROS EXIBIDOS</button>
@@ -410,8 +413,6 @@
 
           <div class="glossary-list" data-glossary-list></div>
 
-          <section class="database-reference-card" data-reference-card aria-labelledby="database-reference-title"></section>
-
           <div class="glossary-method">
             <div>
               <span class="kicker">Método e limites</span>
@@ -423,7 +424,20 @@
             </div>
           </div>
 
-
+          <div class="glossary-sources">
+            <div>
+              <span class="kicker">Autoria e curadoria</span>
+              <h3>FEITURA por Victor Ferreira.</h3>
+            </div>
+            <div>
+              <p>Gerente de Operações | Produção, Processos e Design | Moda, Indústria & Tecnologia | Private Label & B2B</p>
+              <p>A base é organizada e indexada pela FEITURA como aplicação do ecossistema RETEAR®, preservando a identificação das fontes externas e suas respectivas limitações.</p>
+              <div class="source-links">
+                <a href="https://www.linkedin.com/in/victormordekai/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+                <a href="https://wa.me/5541997584893?text=Ol%C3%A1%21%20Conheci%20o%20projeto%20FEITURA%2C%20quero%20fazer%20uma%20mentoria%20RETEAR%21" target="_blank" rel="noopener noreferrer">Mentoria RETEAR no WhatsApp ↗</a>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="formula-workspace" aria-labelledby="formula-title">
@@ -453,27 +467,6 @@
           </div>
         </section>
 
-        <section class="quote-finalization" aria-labelledby="finalization-title">
-          <div class="quote-finalization-head">
-            <div>
-              <div class="section-index mono">05 / REVISÃO FINAL</div>
-              <p class="kicker">Antes de gerar o documento</p>
-              <h2 id="finalization-title">Revise o romaneio antes da validação.</h2>
-            </div>
-            <p>A FEITURA monta uma versão transitória, não editável, para leitura e concordância. A impressão só é liberada nessa revisão.</p>
-          </div>
-          <div class="hud-document-anchor" data-document-hud-anchor>
-            <div class="hud-document-actions" data-document-hud aria-hidden="true">
-              <button type="button" class="button-hud button-dark" data-open-review>REVISAR E VALIDAR ROMANEIO</button>
-            </div>
-          </div>
-          <div class="document-actions-secondary">
-            <button type="button" class="button button-dark" data-export-catalog>BAIXAR CSV</button>
-            <button type="button" class="text-button" data-export-json>BAIXAR JSON</button>
-            <button type="button" class="text-button" data-export-html>BAIXAR DOCUMENTO HTML</button>
-          </div>
-        </section>
-
       </div>
     </section>
 
@@ -497,31 +490,74 @@
             Na próxima etapa, você poderá informar localização, prazo e
             requisitos para encontrar capacidade compatível.
           </p>
-          <a class="button button-dark" href="https://wa.me/5541997584893?text=Ol%C3%A1%21%20Conheci%20o%20projeto%20e%20quero%20fazer%20parte%20do%20hub%20FEITURA!%20Informe-me%20mais%20sobre%21" target="_blank" rel="noopener noreferrer">CADASTRAR HUB FEITURA</a>
 
         </div>
 
-		<div class="glossary-sources">
-            <div>
-              <span class="kicker">Autoria e curadoria</span>
-              <h3>FEITURA por Victor Mordekai.</h3>
-            </div>
-            <div>
-              <p>Gerente de Operações | Produção, Processos e Design | Moda, Indústria & Tecnologia | Private Label & B2B</p>
-              <p>A base é organizada e indexada pela FEITURA como aplicação do ecossistema RETEAR®, preservando a identificação das fontes externas e suas respectivas limitações.</p>
-              <div class="source-links">
-                <a href="https://www.linkedin.com/in/victormordekai/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
-                <a href="https://wa.me/5541997584893?text=Ol%C3%A1%21%20Conheci%20o%20projeto%20FEITURA%2C%20quero%20fazer%20uma%20mentoria%20RETEAR%21" target="_blank" rel="noopener noreferrer">Mentoria RETEAR no WhatsApp ↗</a>
-              </div>
-            </div>
-        </div>
-	</section>
-		
+        <button
+          class="button button-dark"
+          type="button"
+          data-demo-action
+        >
+          Continuar
+        </button>
+
+      </div>
+
+    </section>
+
   </main>
 
   <!-- FOOTER -->
 
-	<div data-footer></div>
+	<footer class="footer">
+	  <div class="shell footer-grid">
+		<div>
+		  <a class="brand footer-brand" href="../index.html">
+			<span class="brand-mark">F</span><span class="brand-word">FEITURA<sup>®</sup></span>
+		  </a>
+		  <p>Conexão produtiva entre demanda, capacidade e trabalho.</p>
+		</div>
+		<div>
+		  <span class="footer-title">FEITURA</span>
+		  <a href="cotar.html">Cotação</a>
+		  <a href="capacidade.html">Capacidade</a>
+		  <a href="rede.html">Rede</a>
+		  <a href="feitura.html">Sobre</a>
+      <a href="manifesto.html">Manifesto</a>
+		</div>
+		<div>
+		  <span class="footer-title">Arquitetura</span>
+		  <span>
+			   <a href="https://victormordekai.github.io/RE-TEAR/"
+			   target="_blank"
+			   rel="noopener noreferrer">RETEAR®</a>
+		  </span>
+		  <span>Infraestrutura operacional</span>
+		  <span>Inteligência produtiva</span>
+		</div>
+		<div>
+		  <span class="footer-title">Estado</span>
+		  <span class="mono">V1 / BRAZIL</span>
+		  <span class="mono">BUILD 2026.10</span>
+		</div>
+	  </div>
+		<div class="shell footer-bottom">
+    <span class="visitor-counter" hidden aria-live="polite">VISITAS <strong data-visitor-count>0</strong></span>
+		  <span>
+			FEITURA® é uma frente do ecossistema
+			<a href="https://victormordekai.github.io/RE-TEAR/"
+			   target="_blank"
+			   rel="noopener noreferrer">RETEAR®</a>.
+		  </span>
+
+		  <span>
+			© 2026
+			<a href="https://victormordekai.github.io/VMORDEKAI/portfolio-1.html"
+			   target="_blank"
+			   rel="noopener noreferrer">VMORDEKAI®</a>
+		  </span>
+		</div>
+	</footer>
 
   <script
     type="module"
