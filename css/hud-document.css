@@ -78,3 +78,6 @@
 @media print{
   .hud-document-anchor,.document-actions-secondary{display:none!important}
 }
+@media(max-width:600px){
+  .hud-document-actions.is-mobile-hidden{display:none!important}
+}
