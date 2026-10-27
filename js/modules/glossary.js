@@ -76,6 +76,7 @@ function stateFor(root){
   if(!root._quoteState){
     root._quoteState = {
       selected:new Set(),
+      included:new Map(),
       quantities:new Map(),
       customPrices:new Map(),
       customMinutes:new Map(),
@@ -316,7 +317,7 @@ function closeMethodReference(root){const modal=root.querySelector("[data-method
 function addMethodReference(root,state){
   const modal=root.querySelector("[data-method-ref-modal]"), item=modal?._method, values=modal?._values||{}, minutes=Number(modal?._minutes)||0;
   if(!item)return;
-  const schema=methodSchema(item); const product=values.product?.trim() || "Produto não informado"; const quantity=Math.max(1,Number(values.quantity)||1); const price=calculateMethodPrice(item.term,values,minutes,state);
+  const schema=methodSchema(item); const product=values.product?.trim() || "Produto não informado"; const quantity=Math.max(0,Number(values.quantity)||0); const price=calculateMethodPrice(item.term,values,minutes,state);
   const summary=schema.filter(f=>!['product','quantity'].includes(f.key)).map(f=>values[f.key] ? `${f.label}: ${values[f.key]}${f.unit?` ${f.unit}`:""}` : "").filter(Boolean).join(" · ");
   const name=`${product} | ${item.term}${summary?` | ${summary}`:""}`;
   const customIndex=state.customRows.length;
@@ -333,7 +334,8 @@ function addMethodReference(root,state){
 }
 
 function selectedItems(state){ return quoteableRecords().filter(item => state.selected.has(item.key)); }
-function quantityFor(state,key){ return Math.max(1, Number(state.quantities.get(key)) || 1); }
+function quantityFor(state,key){ return Math.max(0, Number(state.quantities.get(key)) || 0); }
+function includedFor(state,key){ return state.included.get(key)!==false; }
 
 function baseProcesses(row){
   return row.item?.variables?.processes ?? row.item?.processes ?? row.item?.subprocesses ?? "";
@@ -351,8 +353,8 @@ function applyEditableValues(row,state){
   const machines=state.customMachines.has(key) ? state.customMachines.get(key) : baseMachines(row);
   const materialUnitPrice=state.customMaterialPrices.has(key) ? Math.max(0,Number(state.customMaterialPrices.get(key))||0) : baseMaterialUnitPrice(row);
   const operationalUnitPrice=state.customOperationalPrices.has(key) ? Math.max(0,Number(state.customOperationalPrices.get(key))||0) : row.operationalUnitPrice;
-  const quantity=Math.max(1,Number(row.quantity)||1);
-  return {...row,minutes,processes,machines,materialUnitPrice,operationalUnitPrice,materialTotal:materialUnitPrice*quantity,operationalTotal:operationalUnitPrice*quantity,total:(materialUnitPrice+operationalUnitPrice)*quantity};
+  const quantity=Math.max(0,Number(row.quantity)||0);
+  return {...row,minutes,processes,machines,materialUnitPrice,operationalUnitPrice,materialTotal:materialUnitPrice*quantity,operationalTotal:operationalUnitPrice*quantity,total:(materialUnitPrice+operationalUnitPrice)*quantity,included:includedFor(state,key)};
 }
 function calculate(state){
   const rows = selectedItems(state).map(item => {
@@ -369,7 +371,7 @@ function calculate(state){
     return applyEditableValues({key:item.key,item,minutes,quantity,calculatedUnitPrice,operationalUnitPrice,basis},state);
   });
   const custom = state.customRows.map((row,index)=>{
-    const quantity = Math.max(1,Number(row.quantity)||1);
+    const quantity = Math.max(0,Number(row.quantity)||0);
     const minutes = Math.max(0,Number(row.minutes)||0);
     const calculatedUnitPrice = state.hourly>0 && minutes>0 ? ceilMoney(minutes/60*state.hourly) : ceilMoney(Number(row.price)||0);
     const key=`custom:${index}`;
@@ -409,7 +411,7 @@ function configDefaults(row,state){
   const variables = state.customMethodVariables.has(key) ? state.customMethodVariables.get(key) : (item.methodReference ? formatVariables(item.variables) : "");
   return {
     product:item.product || item.label || "",
-    quantity:row.quantity || 1,
+    quantity:row.quantity ?? 1,
     method,
     processes:state.customProcesses.has(key) ? state.customProcesses.get(key) : 1,
     machines:state.customMachines.has(key) ? state.customMachines.get(key) : 1,
@@ -439,7 +441,7 @@ function renderQuoteConfigPanel(root,state,rows){
     </div>
     <div class="quote-config-grid">
       <label class="is-readonly"><span>Produto / item</span><input type="text" value="${esc(d.product)}" readonly></label>
-      <label><span>Quantidade <small>UN.</small></span><input class="quote-scalar-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(scalarIntegerFormat(d.quantity || 1))}" data-config-field="quantity" data-scalar-integer-input data-scalar-max="9999"></label>
+      <label><span>Quantidade <small>UN.</small></span><input class="quote-scalar-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(scalarIntegerFormat(d.quantity ?? 1))}" data-config-field="quantity" data-scalar-integer-input data-scalar-max="9999"></label>
       <label class="is-readonly"><span>Método de cronoanálise</span><input type="text" value="${esc(d.method)}" readonly></label>
       <label><span>Processos</span><input class="quote-scalar-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(scalarIntegerFormat(d.processes || 0))}" data-config-field="processes" data-scalar-integer-input data-scalar-max="9999"></label>
       <label><span>Máquinas</span><input class="quote-scalar-input" type="text" inputmode="numeric" autocomplete="off" value="${esc(scalarIntegerFormat(d.machines || 0))}" data-config-field="machines" data-scalar-integer-input data-scalar-max="9999"></label>
@@ -455,18 +457,19 @@ function renderResults(root,state){
   const table = root.querySelector("[data-catalog-table]");
   if(!table) return;
   const rows = calculate(state);
-  const totalSeconds = rows.reduce((sum,row)=>sum+row.minutes*60*row.quantity,0);
-  const totalMaterial = rows.reduce((sum,row)=>sum+row.materialTotal,0);
-  const totalOperational = rows.reduce((sum,row)=>sum+row.operationalTotal,0);
+  const activeRows = rows.filter(row=>row.included);
+  const totalSeconds = activeRows.reduce((sum,row)=>sum+row.minutes*60*row.quantity,0);
+  const totalMaterial = activeRows.reduce((sum,row)=>sum+row.materialTotal,0);
+  const totalOperational = activeRows.reduce((sum,row)=>sum+row.operationalTotal,0);
   const total = totalMaterial + totalOperational;
-  root.querySelector("[data-catalog-count]")?.replaceChildren(document.createTextNode(String(rows.length)));
+  root.querySelector("[data-catalog-count]")?.replaceChildren(document.createTextNode(String(activeRows.length)));
   root.querySelector("[data-catalog-hours]")?.replaceChildren(document.createTextNode(durationFormat(totalSeconds)));
   root.querySelector("[data-catalog-material]")?.replaceChildren(document.createTextNode(money(totalMaterial)));
   root.querySelector("[data-catalog-operational]")?.replaceChildren(document.createTextNode(money(totalOperational)));
   root.querySelector("[data-catalog-total]")?.replaceChildren(document.createTextNode(money(total)));
   renderQuoteConfigPanel(root,state,rows);
-  table.innerHTML = rows.length ? rows.map(row=>`<tr data-quote-row="${esc(row.key)}">
-    <td><strong>${esc(row.item.label)}</strong><small>${esc(row.basis)}</small></td>
+  table.innerHTML = rows.length ? rows.map(row=>`<tr data-quote-row="${esc(row.key)}" class="${row.included ? "" : "is-excluded"}">
+    <td><strong>${esc(row.item.label)}</strong><small>${esc(row.basis)}</small>${row.included ? "" : "<small>EXCLUÍDO DA REVISÃO E IMPRESSÃO</small>"}</td>
     <td>${renderEditableText(row.processes,row.key,"processes",`Processos de ${row.item.label}`)}</td>
     <td>${renderEditableText(row.machines,row.key,"machines",`Máquinas de ${row.item.label}`)}</td>
     <td>${renderEditableNumber(row.minutes,row.key,"minutes",`Tempo de ${row.item.label}`)}</td>
@@ -474,7 +477,7 @@ function renderResults(root,state){
     <td><div class="quote-price-editor">${renderEditableNumber(row.operationalUnitPrice,row.key,"operational-price",`Valor operacional unitário de ${row.item.label}`)}<small>${row.calculatedUnitPrice>0 && Math.abs(row.operationalUnitPrice-row.calculatedUnitPrice)>0.005 ? `CALC.: ${money(row.calculatedUnitPrice)}` : "AUTOMÁTICO · EDITÁVEL"}</small></div></td>
     <td>${renderEditableNumber(row.quantity,row.key,"quantity",`Quantidade de ${row.item.label}`,"1","1")}</td>
     <td>${money(row.total)}</td>
-    <td><button type="button" class="quote-row-configure" data-configure-row="${esc(row.key)}">CONFIGURAR</button>${row.item.type === "custom" || row.item.type === "method-reference" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
+    <td><label class="quote-row-include" title="Incluir na revisão e impressão"><input type="checkbox" data-item-include="${esc(row.key)}" ${row.included ? "checked" : ""} aria-label="Incluir ${esc(row.item.label)} na revisão e impressão"><span>INCLUIR</span></label><button type="button" class="quote-row-configure" data-configure-row="${esc(row.key)}">CONFIGURAR</button>${row.item.type === "custom" || row.item.type === "method-reference" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
   </tr>`).join("") : `<tr><td colspan="9" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr>`;
 }
 
@@ -500,7 +503,7 @@ function trackingId(data){
 }
 
 function payload(state){
-  const rows = calculate(state);
+  const rows = calculate(state).filter(row=>row.included);
   const now = new Date();
   const data = {
     schema:"FEITURA-GATE1-ROMANEIO-1.2",
@@ -540,7 +543,7 @@ function buildHtml(data,review=true){
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>sua FEITURA | ${esc(data.trackingId)}</title><style>
 @page{size:A4;margin:18mm 14mm 20mm}*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:"DM Sans",Arial,sans-serif;color:#171713;background:#eee9df;font-size:11px;line-height:1.45}body:before{content:"";display:block} .paper{max-width:900px;margin:24px auto;background:#fbfaf6;padding:34px 38px 54px;box-shadow:0 10px 40px rgba(23,23,19,.08)}header{border-bottom:4px solid #394337;padding-bottom:18px;margin-bottom:26px;color:#252d25}header h1{margin:0;font:700 30px/1 "DM Sans",Arial,sans-serif;letter-spacing:-.04em}header h2{margin:8px 0 0;font:600 12px/1.35 "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}header h3{margin:6px 0 0;font:500 10px "DM Mono",monospace;letter-spacing:.06em;text-transform:uppercase}main h2{margin:0 0 4px;font:400 25px/1.15 Georgia,serif;color:#171713}main>.eyebrow{font:600 9px "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#394337} .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;margin:18px 0 22px}.meta div{padding:13px;border-right:1px solid #cfc9bc;min-height:68px}.meta div:last-child{border-right:0}.meta span,.field-block h3{display:block;font:600 8px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#394337}.meta strong{display:block;margin-top:8px;font:500 10px "DM Mono",monospace;text-transform:uppercase;word-break:break-word}.field-block{margin:14px 0;padding:12px 14px;border:1px solid #d7d1c6}.field-block h3{margin:0 0 7px}.blank-line{font:500 10px "DM Mono",monospace}.blank-area{height:32px;border-bottom:1px solid #888}.table-wrap{margin-top:22px}.table-title{font:600 9px "DM Mono",monospace;letter-spacing:.08em;color:#394337;margin-bottom:8px}table{width:100%;border-collapse:collapse;border:1px solid #bfc0ba;table-layout:fixed}thead{display:table-header-group}th{background:#394337;color:#fbfaf6;text-align:left;font:600 8px "DM Mono",monospace;letter-spacing:.05em;padding:8px;text-transform:uppercase}td{padding:9px 8px;border-top:1px solid #d2d0c8;vertical-align:top;font:500 9px "DM Mono",monospace;word-break:break-word}td strong{display:block;font:700 10px Georgia,serif;color:#171713}td small{display:block;margin-top:3px;font:500 7px "DM Mono",monospace;color:#716f66}.summary{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #cfc9bc;border-top:0}.summary div{padding:13px;border-right:1px solid #cfc9bc}.summary div:last-child{border-right:0}.summary span{display:block;font:600 8px "DM Mono",monospace;color:#394337}.summary strong{display:block;margin-top:4px;font:400 18px Georgia,serif}.trace{margin-top:18px;padding:10px 12px;background:#eee9df;color:#252d25;font:500 8px "DM Mono",monospace;word-break:break-all}.validation{margin-top:28px;padding:18px;border:1px solid #394337;background:#eee9df;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.validation label{display:flex;gap:10px;align-items:flex-start;flex:1 1 58%;min-width:320px;font:500 9px/1.5 "DM Sans",Arial,sans-serif;color:#252d25}.validation input{margin-top:2px;accent-color:#394337}.validation button{border:0;background:#252d25;color:#fbfaf6;padding:11px 15px;font:600 9px "DM Mono",monospace;letter-spacing:.05em;cursor:pointer}.validation button:disabled{opacity:.35;cursor:not-allowed}.validation button#recordButton{background:transparent;color:#252d25;border:1px solid #252d25}.screen-note{margin:18px 0 0;color:#716f66;font:500 8px/1.5 "DM Mono",monospace}footer{margin-top:28px;padding-top:12px;border-top:2px solid #394337;color:#252d25;font:500 8px/1.5 "DM Mono",monospace;display:flex;justify-content:space-between;gap:20px}footer a{color:inherit}footer strong{font-weight:700} @media(max-width:700px){body{background:#fbfaf6}.paper{margin:0;padding:22px}.meta{grid-template-columns:1fr}.meta div{border-right:0;border-bottom:1px solid #cfc9bc}.meta div:last-child{border-bottom:0}.summary{grid-template-columns:1fr 1fr}.summary div{border-right:0;border-bottom:1px solid #cfc9bc}.summary div:nth-child(2n){border-left:1px solid #cfc9bc}.summary div:last-child{grid-column:1/-1}footer{display:block}.validation button{width:100%}} @media print{body{background:#fff}.paper{max-width:none;margin:0;padding:0;box-shadow:none}header{margin-bottom:20px}.validation,.screen-note{display:none!important}footer{position:fixed;left:0;right:0;bottom:0;margin:0;padding:7px 0 0;border-top:1.5px solid #394337;background:#fff;font-size:7px}.trace{page-break-inside:avoid}.field-block{break-inside:avoid}tr{break-inside:avoid}a{color:#252d25;text-decoration:none}}
 </style></head><body><div class="paper"><header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR® | By Victor Mordekai</h3></header><main><div class="eyebrow">05 / revisão final · documento não editável</div><h2>Orçamento / romaneio</h2><div class="meta"><div><span>DE</span><strong>${esc(data.from || "") || "________________________________"}</strong></div><div><span>PARA</span><strong>${esc(data.to || "") || "________________________________"}</strong></div><div><span>DATA DA FEITURA</span><strong>${esc(data.generatedAt)}</strong></div></div>${contact}${production}${deadline}${option.priceTable ? `<div class="table-wrap"><div class="table-title">TABELA DE CUSTOS</div><table><thead><tr><th style="width:24%">ITEM / SERVIÇO</th><th style="width:8%">PROCESSOS</th><th style="width:8%">MQs.</th><th style="width:10%">TEMPO</th><th style="width:11%">MAT. PRIMA<br>UNIT.</th><th style="width:11%">OPERAÇÃO<br>UNIT.</th><th style="width:9%">QTD.</th><th style="width:13%">TOTAL</th></tr></thead><tbody>${rows || '<tr><td colspan="8">NENHUM ITEM COTADO.</td></tr>'}</tbody></table><div class="summary"><div><span>ITENS</span><strong>${data.items.length}</strong></div><div><span>TEMPO TOTAL</span><strong>${durationFormat(data.items.reduce((s,i)=>s+i.minutes*60*i.quantity,0))}</strong></div><div><span>MATÉRIA-PRIMA</span><strong>${money(data.materialTotal)}</strong></div><div><span>VALOR OPERACIONAL</span><strong>${money(data.operationalTotal)}</strong></div><div><span>TOTAL</span><strong>${money(data.total)}</strong></div></div></div>` : ""}<div class="trace"><strong>RASTREABILIDADE:</strong> ${esc(data.trackingId)}<br>GERADO LOCALMENTE · ${esc(data.generatedAt)} · FEITURA-GATE1-ROMANEIO-1.2</div>${consent}</main><footer><span><strong>RETEAR® ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA®</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer></div><script>
-const DATA=${JSON.stringify(data)};const consent=document.getElementById('lgpdConsent');const printButton=document.getElementById('printButton');const recordButton=document.getElementById('recordButton');if(consent&&printButton){consent.addEventListener('change',()=>{printButton.disabled=!consent.checked;});}function downloadRecord(){const payload={schema:'FEITURA-GATE1-TRACE-1.1',recordType:'FEITURA_GATE1_LOCAL_RECORD',trackingId:DATA.trackingId,generatedISO:DATA.generatedISO,generatedAt:DATA.generatedAt,pricingBasis:DATA.pricingBasis,hourly:DATA.pricingBasis==='hourly'?DATA.hourly:null,itemCount:DATA.items.length,items:DATA.items.map(i=>({key:i.key,name:i.name,minutes:i.minutes,processes:i.processes,machines:i.machines,quantity:i.quantity,materialUnitPrice:i.materialUnitPrice,operationalUnitPrice:i.operationalUnitPrice,calculatedOperationalUnitPrice:i.calculatedOperationalUnitPrice,observations:i.observations||"",methodVariables:i.methodVariables||"",materialTotal:i.materialTotal,operationalTotal:i.operationalTotal,total:i.total,basis:i.basis,customized:i.basis.includes('AJUSTADO')||i.basis==='VALOR PRÓPRIO'})),materialTotal:DATA.materialTotal,operationalTotal:DATA.operationalTotal,total:DATA.total,source:'FEITURA Gate 1.7.3.6 / revisão transitória',persistence:'local-download-only; future ingestion endpoint pending Gate 2'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=DATA.trackingId+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}recordButton?.addEventListener('click',downloadRecord);printButton?.addEventListener('click',()=>{downloadRecord();window.print();});
+const DATA=${JSON.stringify(data)};const consent=document.getElementById('lgpdConsent');const printButton=document.getElementById('printButton');const recordButton=document.getElementById('recordButton');if(consent&&printButton){consent.addEventListener('change',()=>{printButton.disabled=!consent.checked;});}function downloadRecord(){const payload={schema:'FEITURA-GATE1-TRACE-1.1',recordType:'FEITURA_GATE1_LOCAL_RECORD',trackingId:DATA.trackingId,generatedISO:DATA.generatedISO,generatedAt:DATA.generatedAt,pricingBasis:DATA.pricingBasis,hourly:DATA.pricingBasis==='hourly'?DATA.hourly:null,itemCount:DATA.items.length,items:DATA.items.map(i=>({key:i.key,name:i.name,minutes:i.minutes,processes:i.processes,machines:i.machines,quantity:i.quantity,materialUnitPrice:i.materialUnitPrice,operationalUnitPrice:i.operationalUnitPrice,calculatedOperationalUnitPrice:i.calculatedOperationalUnitPrice,observations:i.observations||"",methodVariables:i.methodVariables||"",materialTotal:i.materialTotal,operationalTotal:i.operationalTotal,total:i.total,basis:i.basis,customized:i.basis.includes('AJUSTADO')||i.basis==='VALOR PRÓPRIO'})),materialTotal:DATA.materialTotal,operationalTotal:DATA.operationalTotal,total:DATA.total,source:'FEITURA Gate 1.7.3.7 / revisão transitória',persistence:'local-download-only; future ingestion endpoint pending Gate 2'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=DATA.trackingId+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}recordButton?.addEventListener('click',downloadRecord);printButton?.addEventListener('click',()=>{downloadRecord();window.print();});
 </script></body></html>`;
 }
 
@@ -596,10 +599,10 @@ export function initGlossary(){
         const value=scalarIntegerNumber(t.value);
         const formatted=scalarIntegerFormat(value);
         if(t.value!==formatted) t.value=formatted;
-        if(t.matches("[data-config-field=quantity]")){ const key=state.activeConfigKey; if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(1,value)}else state.quantities.set(key,Math.max(1,value)); }
+        if(t.matches("[data-config-field=quantity]")){ const key=state.activeConfigKey; if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(0,value)}else state.quantities.set(key,Math.max(0,value)); }
         if(t.matches("[data-config-field=processes]")) state.customProcesses.set(state.activeConfigKey,value);
         if(t.matches("[data-config-field=machines]")) state.customMachines.set(state.activeConfigKey,value);
-        if(t.matches("[data-item-quantity]")){const key=t.dataset.itemQuantity;if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(1,value)}else state.quantities.set(key,Math.max(1,value));}
+        if(t.matches("[data-item-quantity]")){const key=t.dataset.itemQuantity;if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(0,value)}else state.quantities.set(key,Math.max(0,value));}
         if(t.matches("[data-item-processes]")) state.customProcesses.set(t.dataset.itemProcesses,value);
         if(t.matches("[data-item-machines]")) state.customMachines.set(t.dataset.itemMachines,value);
         return;
@@ -622,7 +625,7 @@ export function initGlossary(){
       if(t.matches("[data-config-field]")){
         const key=state.activeConfigKey, field=t.dataset.configField;
         if(!key) return;
-        if(field==="quantity"){ if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(1,Number(t.value)||1)}else state.quantities.set(key,Math.max(1,Number(t.value)||1)); }
+        if(field==="quantity"){ if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(0,Number(t.value)||0)}else state.quantities.set(key,Math.max(0,Number(t.value)||0)); }
         if(field==="minutes") state.customMinutes.set(key,timeInputMinutes(t.value));
         if(field==="processes") state.customProcesses.set(key,scalarIntegerNumber(t.value));
         if(field==="machines") state.customMachines.set(key,scalarIntegerNumber(t.value));
@@ -657,12 +660,18 @@ export function initGlossary(){
     });
     root.addEventListener("change",event=>{
       const t=event.target;
+      if(t.matches("[data-item-include]")){
+        state.included.set(t.dataset.itemInclude,t.checked);
+        renderResults(root,state);
+        return;
+      }
       if(t.matches("[data-glossary-filter]")){renderGlossary(root,state);return;}
       if(t.matches("input[name=pricingBasis]")){state.pricingBasis=t.value;renderGlossary(root,state);renderResults(root,state);return;}
       if(t.matches("[data-glossary-check]")){const item=t.closest("[data-glossary-item]");if(!item)return;if(t.checked){
         const key=item.dataset.key;
         const record=records().find(r=>r.key===key);
         state.selected.add(key);
+        state.included.set(key,true);
         if(!state.quantities.has(key))state.quantities.set(key,1);
         if(!state.customProcesses.has(key))state.customProcesses.set(key,1);
         if(!state.customMachines.has(key))state.customMachines.set(key,1);
@@ -671,7 +680,7 @@ export function initGlossary(){
         if(!state.customObservations.has(key))state.customObservations.set(key,record?.notes || "");
         if(!state.customMethodVariables.has(key))state.customMethodVariables.set(key,"");
         state.activeConfigKey=key;
-      }else{state.selected.delete(item.dataset.key);state.quantities.delete(item.dataset.key);state.customPrices.delete(item.dataset.key);state.customProcesses.delete(item.dataset.key);state.customMachines.delete(item.dataset.key);state.customMinutes.delete(item.dataset.key);state.customMaterialPrices.delete(item.dataset.key);state.customOperationalPrices.delete(item.dataset.key);state.customObservations.delete(item.dataset.key);state.customMethodVariables.delete(item.dataset.key);if(state.activeConfigKey===item.dataset.key)state.activeConfigKey=""}renderGlossary(root,state);renderResults(root,state);return;}
+      }else{state.selected.delete(item.dataset.key);state.included.delete(item.dataset.key);state.quantities.delete(item.dataset.key);state.customPrices.delete(item.dataset.key);state.customProcesses.delete(item.dataset.key);state.customMachines.delete(item.dataset.key);state.customMinutes.delete(item.dataset.key);state.customMaterialPrices.delete(item.dataset.key);state.customOperationalPrices.delete(item.dataset.key);state.customObservations.delete(item.dataset.key);state.customMethodVariables.delete(item.dataset.key);if(state.activeConfigKey===item.dataset.key)state.activeConfigKey=""}renderGlossary(root,state);renderResults(root,state);return;}
       if(t.matches("[data-include-contact]"))state.include.contact=t.checked;
       if(t.matches("[data-include-price-table]"))state.include.priceTable=t.checked;
       if(t.matches("[data-include-production]"))state.include.production=t.checked;
@@ -686,8 +695,8 @@ export function initGlossary(){
       if(event.target.closest("[data-method-ref-close]")){closeMethodReference(root);return;}
       if(event.target.closest("[data-method-ref-add]")){addMethodReference(root,state);return;}
       const detail=event.target.closest("[data-glossary-detail]"); if(detail){const panel=detail.closest("[data-glossary-item]")?.querySelector(".glossary-detail-panel");if(panel){const open=detail.getAttribute("aria-expanded")==="true";detail.setAttribute("aria-expanded",String(!open));panel.hidden=open}return;}
-      if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
-      if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customPrices.clear();state.customMinutes.clear();state.customProcesses.clear();state.customMachines.clear();state.customMaterialPrices.clear();state.customOperationalPrices.clear();state.customObservations.clear();state.customMethodVariables.clear();state.customProcesses.clear();state.customMachines.clear();state.customMinutes.clear();state.activeConfigKey="";state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}
+      if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);state.included.set(item.key,true);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
+      if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.included.clear();state.quantities.clear();state.customPrices.clear();state.customMinutes.clear();state.customProcesses.clear();state.customMachines.clear();state.customMaterialPrices.clear();state.customOperationalPrices.clear();state.customObservations.clear();state.customMethodVariables.clear();state.customProcesses.clear();state.customMachines.clear();state.customMinutes.clear();state.activeConfigKey="";state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}
       const remove=event.target.closest("[data-remove-custom]"); if(remove){const index=Number(remove.dataset.removeCustom.split(":")[1]);if(Number.isInteger(index))state.customRows.splice(index,1);renderResults(root,state);return;}
       if(event.target.closest("[data-open-review]")){openReview(root,state);return;}
       if(event.target.closest("[data-export-catalog]")){exportCatalog(root,state,"csv");return;}

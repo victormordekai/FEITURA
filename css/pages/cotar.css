@@ -273,3 +273,7 @@ input[type="text"],input[type="search"],textarea{text-transform:uppercase}.gloss
 .method-ref-actions .button{margin:0;}
 @media(max-width:600px){.method-ref-modal{padding:12px;}.method-ref-dialog{max-height:94vh;padding:24px 18px 20px;}.method-ref-form{grid-template-columns:1fr;padding:14px;}.method-ref-derived{grid-column:auto;}.method-ref-actions{display:grid;grid-template-columns:1fr;gap:10px}.method-ref-actions .button,.method-ref-actions .text-button{width:100%;}}
 @media(prefers-reduced-motion:reduce){.method-ref-modal{transition:none;}}
+
+/* GATE 1.7.3.7 / INCLUSÃO TRANSITÓRIA DO ROMANEIO */
+.quote-row-include{display:flex;align-items:center;gap:6px;margin-bottom:6px;font:600 .5rem "DM Mono",monospace;color:var(--muted);letter-spacing:.04em;cursor:pointer;white-space:nowrap}.quote-row-include input{margin:0;accent-color:var(--olive);width:13px;height:13px}.quote-row-include span{display:inline-block}.quote-document-table tr.is-excluded{opacity:.52}.quote-document-table tr.is-excluded td{background:var(--paper-deep)}.quote-document-table tr.is-excluded .quote-cell-input{opacity:.8}
+@media print{.quote-row-include{display:none!important}.quote-document-table tr.is-excluded{display:none!important}}
