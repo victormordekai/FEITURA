@@ -1,5 +1,7 @@
-# FEITURA® V1 · GATE 1.7.3.5
+# FEITURA® V1 · GATE 1.7.3.6
 
-Base: GATE 1.7.3.4.
+Correção isolada do campo TEMPO para entrada e exibição em MIN:SEG, com preenchimento progressivo e total do romaneio em HORA:MIN:SEG.
 
-Ajuste das entradas escalares de PROCESSOS, MQs., TEMPO e QUANTIDADE para impedir fechamento/re-renderização durante a digitação e aplicar limites de precisão consistentes. TEMPO usa duas casas decimais até 9.999,99; PROCESSOS, MQs. e QUANTIDADE usam inteiros até 9.999. Footer rastreável atualizado.
+Base operacional: GATE 1.7.3.5.
+
+Footer: `V1: GATE 1.7.3.6 2026.10`.
