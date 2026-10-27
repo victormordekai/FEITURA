@@ -31,6 +31,14 @@ function stateFor(root){
       selected:new Set(),
       quantities:new Map(),
       customPrices:new Map(),
+      customMinutes:new Map(),
+      customProcesses:new Map(),
+      customMachines:new Map(),
+      customMaterialPrices:new Map(),
+      customOperationalPrices:new Map(),
+      customObservations:new Map(),
+      customMethodVariables:new Map(),
+      activeConfigKey:"",
       hourly:0,
       pricingBasis:"hourly",
       customRows:[],
@@ -264,63 +272,155 @@ function addMethodReference(root,state){
   const schema=methodSchema(item); const product=values.product?.trim() || "Produto não informado"; const quantity=Math.max(1,Number(values.quantity)||1); const price=calculateMethodPrice(item.term,values,minutes,state);
   const summary=schema.filter(f=>!['product','quantity'].includes(f.key)).map(f=>values[f.key] ? `${f.label}: ${values[f.key]}${f.unit?` ${f.unit}`:""}` : "").filter(Boolean).join(" · ");
   const name=`${product} | ${item.term}${summary?` | ${summary}`:""}`;
-  state.customRows.push({name,minutes,price,quantity,methodReference:true,referenceId:`method:${item.term}`,referenceName:item.term,variables:values});
+  const customIndex=state.customRows.length;
+  state.customRows.push({name,product,minutes,price,quantity,methodReference:true,referenceId:`method:${item.term}`,referenceName:item.term,variables:values});
+  const customKey=`custom:${customIndex}`;
+  state.customProcesses.set(customKey,1);
+  state.customMachines.set(customKey,1);
+  state.customMaterialPrices.set(customKey,0);
+  state.customMinutes.set(customKey,minutes);
+  state.customObservations.set(customKey,"");
+  state.customMethodVariables.set(customKey,formatVariables(values));
+  state.activeConfigKey=customKey;
   closeMethodReference(root); renderResults(root,state); root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function selectedItems(state){ return quoteableRecords().filter(item => state.selected.has(item.key)); }
 function quantityFor(state,key){ return Math.max(1, Number(state.quantities.get(key)) || 1); }
 
+function baseProcesses(row){
+  return row.item?.variables?.processes ?? row.item?.processes ?? row.item?.subprocesses ?? "";
+}
+function baseMachines(row){
+  return row.item?.variables?.machines ?? row.item?.machines ?? "";
+}
+function baseMaterialUnitPrice(row){
+  return Number(row.item?.variables?.materialUnitPrice ?? row.item?.material_price ?? row.item?.material_cost ?? row.item?.raw_material_price ?? 0) || 0;
+}
+function applyEditableValues(row,state){
+  const key=row.key;
+  const minutes=state.customMinutes.has(key) ? Math.max(0,Number(state.customMinutes.get(key))||0) : row.minutes;
+  const processes=state.customProcesses.has(key) ? state.customProcesses.get(key) : baseProcesses(row);
+  const machines=state.customMachines.has(key) ? state.customMachines.get(key) : baseMachines(row);
+  const materialUnitPrice=state.customMaterialPrices.has(key) ? Math.max(0,Number(state.customMaterialPrices.get(key))||0) : baseMaterialUnitPrice(row);
+  const operationalUnitPrice=state.customOperationalPrices.has(key) ? Math.max(0,Number(state.customOperationalPrices.get(key))||0) : row.operationalUnitPrice;
+  const quantity=Math.max(1,Number(row.quantity)||1);
+  return {...row,minutes,processes,machines,materialUnitPrice,operationalUnitPrice,materialTotal:materialUnitPrice*quantity,operationalTotal:operationalUnitPrice*quantity,total:(materialUnitPrice+operationalUnitPrice)*quantity};
+}
 function calculate(state){
   const rows = selectedItems(state).map(item => {
     const quantity = quantityFor(state,item.key);
     const minutes = minutesFor(item);
-    let unitPrice = 0;
-    let basis = "";
-    let calculatedUnitPrice = 0;
-    if(state.pricingBasis === "standard"){
-      unitPrice = standardPriceFor(item);
-      basis = unitPrice > 0 ? "VALOR PADRÃO" : "SEM VALOR PADRÃO";
-    }else{
-      calculatedUnitPrice = calculatedPrice(item,state);
-      const custom = Number(state.customPrices.get(item.key));
-      unitPrice = custom > 0 ? custom : calculatedUnitPrice;
-      basis = custom > 0 ? "VALOR/HORA · AJUSTADO" : (unitPrice > 0 ? "VALOR/HORA · CALCULADO" : "SEM VALOR/HORA");
-    }
-    return { key:item.key,item,minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis };
+    const calculatedUnitPrice = state.pricingBasis === "standard" ? standardPriceFor(item) : calculatedPrice(item,state);
+    const legacyCustom = Number(state.customPrices.get(item.key));
+    const operationalUnitPrice = Number(state.customOperationalPrices.get(item.key)) > 0
+      ? Number(state.customOperationalPrices.get(item.key))
+      : (legacyCustom > 0 ? legacyCustom : calculatedUnitPrice);
+    const basis = state.customOperationalPrices.has(item.key) || legacyCustom > 0
+      ? (state.pricingBasis === "standard" ? "VALOR OPERACIONAL · AJUSTADO" : "VALOR/HORA · AJUSTADO")
+      : (operationalUnitPrice > 0 ? (state.pricingBasis === "standard" ? "VALOR PADRÃO" : "VALOR/HORA · CALCULADO") : (state.pricingBasis === "standard" ? "SEM VALOR PADRÃO" : "SEM VALOR/HORA"));
+    return applyEditableValues({key:item.key,item,minutes,quantity,calculatedUnitPrice,operationalUnitPrice,basis},state);
   });
   const custom = state.customRows.map((row,index)=>{
     const quantity = Math.max(1,Number(row.quantity)||1);
     const minutes = Math.max(0,Number(row.minutes)||0);
-    const calculatedUnitPrice = state.hourly>0 ? minutes/60*state.hourly : 0;
-    const unitPrice = Number(row.price)>0 ? Number(row.price) : calculatedUnitPrice;
-    return {key:`custom:${index}`,item:{label:row.name,type:row.methodReference ? "method-reference" : "custom",referenceId:row.referenceId || "",variables:row.variables || {}},minutes,quantity,unitPrice,calculatedUnitPrice,total:unitPrice*quantity,basis:Number(row.price)>0?(row.methodReference?"MÉTODO · VALOR DERIVADO":"VALOR PRÓPRIO"):"VALOR/HORA"};
+    const calculatedUnitPrice = state.hourly>0 && minutes>0 ? minutes/60*state.hourly : Number(row.price)||0;
+    const key=`custom:${index}`;
+    const operationalUnitPrice = Number(state.customOperationalPrices.get(key)) > 0 ? Number(state.customOperationalPrices.get(key)) : calculatedUnitPrice;
+    const item={label:row.name,product:row.product || row.name,type:row.methodReference ? "method-reference" : "custom",referenceId:row.referenceId || "",variables:row.variables || {}};
+    const basis=state.customOperationalPrices.has(key) ? "VALOR OPERACIONAL · AJUSTADO" : (Number(row.price)>0 ? (row.methodReference ? "MÉTODO · VALOR DERIVADO" : "VALOR PRÓPRIO") : "VALOR/HORA");
+    return applyEditableValues({key,item,minutes,quantity,calculatedUnitPrice,operationalUnitPrice,basis},state);
   });
   return [...rows,...custom];
 }
 
-function rowProcesses(row){ return row.item?.variables?.processes ? number(row.item.variables.processes) : ""; }
-function rowMachines(row){ return row.item?.variables?.machines ? number(row.item.variables.machines) : ""; }
+function renderEditableText(value,key,attribute,label){
+  return `<input class="quote-cell-input quote-cell-text" type="text" value="${esc(value)}" data-item-${attribute}="${esc(key)}" aria-label="${esc(label)}">`;
+}
+function renderEditableNumber(value,key,attribute,label,step="0.01",min="0"){
+  return `<input class="quote-cell-input" type="number" min="${min}" step="${step}" value="${Number(value||0)}" data-item-${attribute}="${esc(key)}" aria-label="${esc(label)}">`;
+}
+
+function formatVariables(variables){
+  if(!variables || typeof variables !== "object") return "";
+  return Object.entries(variables).filter(([key,value])=>key!=="product" && value!=="" && value!=null).map(([key,value])=>`${key}: ${value}`).join("\n");
+}
+
+function configDefaults(row,state){
+  const key=row.key;
+  const item=row.item || {};
+  const method = item.methodReference ? (item.referenceName || item.variables?.method || "MÉTODO DE CRONOANÁLISE") : (item.method || "REFERÊNCIA DIRETA");
+  const observation = state.customObservations.has(key) ? state.customObservations.get(key) : (item.notes || "");
+  const variables = state.customMethodVariables.has(key) ? state.customMethodVariables.get(key) : (item.methodReference ? formatVariables(item.variables) : "");
+  return {
+    product:item.product || item.label || "",
+    quantity:row.quantity || 1,
+    method,
+    processes:state.customProcesses.has(key) ? state.customProcesses.get(key) : 1,
+    machines:state.customMachines.has(key) ? state.customMachines.get(key) : 1,
+    minutes:state.customMinutes.has(key) ? state.customMinutes.get(key) : row.minutes,
+    materialUnitPrice:state.customMaterialPrices.has(key) ? state.customMaterialPrices.get(key) : 0,
+    operationalUnitPrice:state.customOperationalPrices.has(key) ? state.customOperationalPrices.get(key) : row.operationalUnitPrice,
+    observation,
+    variables
+  };
+}
+
+function renderQuoteConfigPanel(root,state,rows){
+  let panel=root.querySelector("[data-quote-config-panel]");
+  if(!panel) return;
+  const active=rows.find(row=>row.key===state.activeConfigKey);
+  if(!active){panel.hidden=true;panel.innerHTML="";return;}
+  const d=configDefaults(active,state);
+  panel.hidden=false;
+  panel.innerHTML=`
+    <div class="quote-config-head">
+      <div>
+        <span class="kicker">Painel de configuração da cotação</span>
+        <h3>${esc(d.product)}</h3>
+        <p>Os valores desta configuração pertencem à cotação atual. A referência original do banco de dados permanece inalterada.</p>
+      </div>
+      <button type="button" class="text-button" data-close-quote-config>FECHAR</button>
+    </div>
+    <div class="quote-config-grid">
+      <label class="is-readonly"><span>Produto / item</span><input type="text" value="${esc(d.product)}" readonly></label>
+      <label><span>Quantidade <small>UN.</small></span><input type="number" min="1" step="1" value="${Number(d.quantity)||1}" data-config-field="quantity"></label>
+      <label class="is-readonly"><span>Método de cronoanálise</span><input type="text" value="${esc(d.method)}" readonly></label>
+      <label><span>Processos</span><input type="number" min="0" step="1" value="${Number(d.processes)||0}" data-config-field="processes"></label>
+      <label><span>Máquinas</span><input type="number" min="0" step="1" value="${Number(d.machines)||0}" data-config-field="machines"></label>
+      <label><span>Tempo <small>MIN./UN.</small></span><input type="number" min="0" step="0.01" value="${Number(d.minutes)||0}" data-config-field="minutes"></label>
+      <label><span>Matéria-prima <small>R$/UN.</small></span><input type="number" min="0" step="0.01" value="${Number(d.materialUnitPrice)||0}" data-config-field="materialUnitPrice"></label>
+      <label><span>Operação unitária <small>R$/UN.</small></span><input type="number" min="0" step="0.01" value="${Number(d.operationalUnitPrice)||0}" data-config-field="operationalUnitPrice"></label>
+      <label class="quote-config-wide"><span>Observações</span><textarea data-config-field="observation" rows="3">${esc(d.observation)}</textarea></label>
+      <label class="quote-config-wide"><span>Variáveis específicas do método</span><textarea data-config-field="variables" rows="4" placeholder="Registrar somente as variáveis necessárias ao método.">${esc(d.variables)}</textarea></label>
+    </div>`;
+}
 
 function renderResults(root,state){
   const table = root.querySelector("[data-catalog-table]");
   if(!table) return;
   const rows = calculate(state);
-  const total = rows.reduce((sum,row)=>sum+row.total,0);
   const totalHours = rows.reduce((sum,row)=>sum+(row.minutes/60)*row.quantity,0);
+  const totalMaterial = rows.reduce((sum,row)=>sum+row.materialTotal,0);
+  const totalOperational = rows.reduce((sum,row)=>sum+row.operationalTotal,0);
+  const total = totalMaterial + totalOperational;
   root.querySelector("[data-catalog-count]")?.replaceChildren(document.createTextNode(String(rows.length)));
   root.querySelector("[data-catalog-hours]")?.replaceChildren(document.createTextNode(`${number(totalHours)}H`));
+  root.querySelector("[data-catalog-material]")?.replaceChildren(document.createTextNode(money(totalMaterial)));
+  root.querySelector("[data-catalog-operational]")?.replaceChildren(document.createTextNode(money(totalOperational)));
   root.querySelector("[data-catalog-total]")?.replaceChildren(document.createTextNode(money(total)));
+  renderQuoteConfigPanel(root,state,rows);
   table.innerHTML = rows.length ? rows.map(row=>`<tr data-quote-row="${esc(row.key)}">
     <td><strong>${esc(row.item.label)}</strong><small>${esc(row.basis)}</small></td>
-    <td>${rowProcesses(row)}</td>
-    <td>${rowMachines(row)}</td>
-    <td>${number(row.minutes)} MIN.</td>
-    <td>${state.pricingBasis === "hourly" && row.item.type !== "custom" && row.item.type !== "method-reference" ? `<div class="quote-price-editor"><input class="quote-unit-price" type="number" min="0" step="0.01" value="${Number(row.unitPrice||0).toFixed(2)}" data-item-price="${esc(row.key)}" aria-label="Valor unitário de ${esc(row.item.label)}"><small>${row.calculatedUnitPrice>0 && Math.abs(row.unitPrice-row.calculatedUnitPrice)>0.005 ? `CALC.: ${money(row.calculatedUnitPrice)}` : "EDITÁVEL"}</small></div>` : (row.unitPrice>0 ? money(row.unitPrice) : "SEM VALOR")}</td>
-    <td><input class="quote-quantity" type="number" min="1" step="1" value="${row.quantity}" data-item-quantity="${esc(row.key)}" aria-label="Quantidade de ${esc(row.item.label)}"></td>
-    <td>${row.total>0 ? money(row.total) : ""}</td>
-    <td>${row.item.type === "custom" || row.item.type === "method-reference" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
-  </tr>`).join("") : `<tr><td colspan="8" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr>`;
+    <td>${renderEditableText(row.processes,row.key,"processes",`Processos de ${row.item.label}`)}</td>
+    <td>${renderEditableText(row.machines,row.key,"machines",`Máquinas de ${row.item.label}`)}</td>
+    <td>${renderEditableNumber(row.minutes,row.key,"minutes",`Tempo de ${row.item.label}`)}</td>
+    <td>${renderEditableNumber(row.materialUnitPrice,row.key,"material-price",`Matéria-prima unitária de ${row.item.label}`)}</td>
+    <td><div class="quote-price-editor">${renderEditableNumber(row.operationalUnitPrice,row.key,"operational-price",`Valor operacional unitário de ${row.item.label}`)}<small>${row.calculatedUnitPrice>0 && Math.abs(row.operationalUnitPrice-row.calculatedUnitPrice)>0.005 ? `CALC.: ${money(row.calculatedUnitPrice)}` : "AUTOMÁTICO · EDITÁVEL"}</small></div></td>
+    <td>${renderEditableNumber(row.quantity,row.key,"quantity",`Quantidade de ${row.item.label}`,"1","1")}</td>
+    <td>${money(row.total)}</td>
+    <td><button type="button" class="quote-row-configure" data-configure-row="${esc(row.key)}">CONFIGURAR</button>${row.item.type === "custom" || row.item.type === "method-reference" ? `<button type="button" class="quote-row-remove" data-remove-custom="${esc(row.key)}">REMOVER</button>` : ""}</td>
+  </tr>`).join("") : `<tr><td colspan="9" class="empty-state">COTE REGISTROS NO BANCO DE DADOS TÉCNICO PARA MONTAR A TABELA.</td></tr>`;
 }
 
 function markGenerated(root,state){
@@ -329,7 +429,7 @@ function markGenerated(root,state){
 }
 
 function fingerprint(data){
-  const source = JSON.stringify(data.items.map(i=>[i.name,i.quantity,Math.round(i.unitPrice*100)]));
+  const source = JSON.stringify(data.items.map(i=>[i.name,i.quantity,Math.round(i.materialUnitPrice*100),Math.round(i.operationalUnitPrice*100),Math.round(i.minutes*100)]));
   let hash = 2166136261;
   for(let i=0;i<source.length;i++) hash = Math.imul(hash ^ source.charCodeAt(i), 16777619);
   return (hash >>> 0).toString(36).toUpperCase().slice(-4).padStart(4,"0");
@@ -348,7 +448,7 @@ function payload(state){
   const rows = calculate(state);
   const now = new Date();
   const data = {
-    schema:"FEITURA-GATE1-ROMANEIO-1.1",
+    schema:"FEITURA-GATE1-ROMANEIO-1.2",
     generatedISO:isoNow(),
     generatedAt:state.generatedAt || localDateTime(now),
     from:document.querySelector("[data-document-from]")?.value || "",
@@ -358,7 +458,9 @@ function payload(state){
     pricingBasis:state.pricingBasis,
     hourly:Number(state.hourly)||0,
     include:{...state.include},
-    items:rows.map(row=>({key:row.key,name:row.item.label,minutes:row.minutes,quantity:row.quantity,calculatedUnitPrice:row.calculatedUnitPrice||0,unitPrice:row.unitPrice,total:row.total,basis:row.basis,referenceId:row.item.referenceId||null,variables:row.item.variables||null})),
+    items:rows.map(row=>({key:row.key,name:row.item.label,product:row.item.product||row.item.label,minutes:row.minutes,processes:row.processes||"",machines:row.machines||"",quantity:row.quantity,materialUnitPrice:row.materialUnitPrice||0,operationalUnitPrice:row.operationalUnitPrice||0,calculatedOperationalUnitPrice:row.calculatedUnitPrice||0,materialTotal:row.materialTotal||0,operationalTotal:row.operationalTotal||0,total:row.total,basis:row.basis,referenceId:row.item.referenceId||null,variables:row.item.variables||null,observations:state.customObservations.get(row.key)||"",methodVariables:state.customMethodVariables.get(row.key)||""})),
+    materialTotal:rows.reduce((sum,row)=>sum+row.materialTotal,0),
+    operationalTotal:rows.reduce((sum,row)=>sum+row.operationalTotal,0),
     total:rows.reduce((sum,row)=>sum+row.total,0)
   };
   data.trackingId=trackingId(data);
@@ -375,15 +477,15 @@ const csv = value => `"${String(value ?? "").replace(/"/g,'""')}"`;
 
 function buildHtml(data,review=true){
   const option = data.include || {};
-  const rows = data.items.map(i=>`<tr><td><strong>${esc(i.name)}</strong><small>${esc(i.basis)}</small></td><td>${esc(i.variables?.processes||"")}</td><td>${esc(i.variables?.machines||"")}</td><td>${number(i.minutes)} MIN.</td><td>${i.unitPrice?money(i.unitPrice):"SEM VALOR"}</td><td>${number(i.quantity)}</td><td>${i.total?money(i.total):""}</td></tr>`).join("");
+  const rows = data.items.map(i=>`<tr><td><strong>${esc(i.name)}</strong><small>${esc(i.basis)}</small>${i.observations ? `<small>OBS.: ${esc(i.observations)}</small>` : ""}${i.methodVariables ? `<small>VAR.: ${esc(i.methodVariables).replace(/\n/g," · ")}</small>` : ""}</td><td>${esc(i.processes||i.variables?.processes||"")}</td><td>${esc(i.machines||i.variables?.machines||"")}</td><td>${number(i.minutes)} MIN.</td><td>${money(i.materialUnitPrice)}</td><td>${money(i.operationalUnitPrice)}</td><td>${number(i.quantity)}</td><td>${money(i.total)}</td></tr>`).join("");
   const consent = review ? `<div class="validation"><label><input id="lgpdConsent" type="checkbox"><span>Declaro que compreendo que os dados utilizados nesta revisão são tratados como dados públicos ou informações fornecidas para a composição do documento. Concordo com o manuseio necessário à geração e impressão deste romaneio, observados os princípios aplicáveis da LGPD.</span></label><button id="printButton" type="button" disabled>VALIDAR E IMPRIMIR</button><button id="recordButton" type="button">BAIXAR REGISTRO</button></div>` : "";
   const contact = option.contact ? `<section class="field-block"><h3>DADOS DE CONTATO E ENDEREÇO</h3><div class="blank-line">______________________________________________</div></section>` : "";
   const production = option.production ? `<section class="field-block"><h3>SOLICITAÇÃO DE PRODUÇÃO</h3><div class="blank-area">\u00a0</div></section>` : "";
   const deadline = option.deadline ? `<section class="field-block"><h3>PRAZO VIGENTE</h3><p>${esc(data.deadlineFrom || "____/____/________")} A ${esc(data.deadlineTo || "____/____/________")}</p></section>` : "";
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>sua FEITURA | ${esc(data.trackingId)}</title><style>
-@page{size:A4;margin:18mm 14mm 20mm}*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:"DM Sans",Arial,sans-serif;color:#171713;background:#eee9df;font-size:11px;line-height:1.45}body:before{content:"";display:block} .paper{max-width:900px;margin:24px auto;background:#fbfaf6;padding:34px 38px 54px;box-shadow:0 10px 40px rgba(23,23,19,.08)}header{border-bottom:4px solid #394337;padding-bottom:18px;margin-bottom:26px;color:#252d25}header h1{margin:0;font:700 30px/1 "DM Sans",Arial,sans-serif;letter-spacing:-.04em}header h2{margin:8px 0 0;font:600 12px/1.35 "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}header h3{margin:6px 0 0;font:500 10px "DM Mono",monospace;letter-spacing:.06em;text-transform:uppercase}main h2{margin:0 0 4px;font:400 25px/1.15 Georgia,serif;color:#171713}main>.eyebrow{font:600 9px "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#394337} .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;margin:18px 0 22px}.meta div{padding:13px;border-right:1px solid #cfc9bc;min-height:68px}.meta div:last-child{border-right:0}.meta span,.field-block h3{display:block;font:600 8px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#394337}.meta strong{display:block;margin-top:8px;font:500 10px "DM Mono",monospace;text-transform:uppercase;word-break:break-word}.field-block{margin:14px 0;padding:12px 14px;border:1px solid #d7d1c6}.field-block h3{margin:0 0 7px}.blank-line{font:500 10px "DM Mono",monospace}.blank-area{height:32px;border-bottom:1px solid #888}.table-wrap{margin-top:22px}.table-title{font:600 9px "DM Mono",monospace;letter-spacing:.08em;color:#394337;margin-bottom:8px}table{width:100%;border-collapse:collapse;border:1px solid #bfc0ba;table-layout:fixed}thead{display:table-header-group}th{background:#394337;color:#fbfaf6;text-align:left;font:600 8px "DM Mono",monospace;letter-spacing:.05em;padding:8px;text-transform:uppercase}td{padding:9px 8px;border-top:1px solid #d2d0c8;vertical-align:top;font:500 9px "DM Mono",monospace;word-break:break-word}td strong{display:block;font:700 10px Georgia,serif;color:#171713}td small{display:block;margin-top:3px;font:500 7px "DM Mono",monospace;color:#716f66}.summary{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;border-top:0}.summary div{padding:13px;border-right:1px solid #cfc9bc}.summary div:last-child{border-right:0}.summary span{display:block;font:600 8px "DM Mono",monospace;color:#394337}.summary strong{display:block;margin-top:4px;font:400 18px Georgia,serif}.trace{margin-top:18px;padding:10px 12px;background:#eee9df;color:#252d25;font:500 8px "DM Mono",monospace;word-break:break-all}.validation{margin-top:28px;padding:18px;border:1px solid #394337;background:#eee9df;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.validation label{display:flex;gap:10px;align-items:flex-start;flex:1 1 58%;min-width:320px;font:500 9px/1.5 "DM Sans",Arial,sans-serif;color:#252d25}.validation input{margin-top:2px;accent-color:#394337}.validation button{border:0;background:#252d25;color:#fbfaf6;padding:11px 15px;font:600 9px "DM Mono",monospace;letter-spacing:.05em;cursor:pointer}.validation button:disabled{opacity:.35;cursor:not-allowed}.validation button#recordButton{background:transparent;color:#252d25;border:1px solid #252d25}.screen-note{margin:18px 0 0;color:#716f66;font:500 8px/1.5 "DM Mono",monospace}footer{margin-top:28px;padding-top:12px;border-top:2px solid #394337;color:#252d25;font:500 8px/1.5 "DM Mono",monospace;display:flex;justify-content:space-between;gap:20px}footer a{color:inherit}footer strong{font-weight:700} @media(max-width:700px){body{background:#fbfaf6}.paper{margin:0;padding:22px}.meta{grid-template-columns:1fr}.meta div{border-right:0;border-bottom:1px solid #cfc9bc}.meta div:last-child{border-bottom:0}footer{display:block}.validation button{width:100%}} @media print{body{background:#fff}.paper{max-width:none;margin:0;padding:0;box-shadow:none}header{margin-bottom:20px}.validation,.screen-note{display:none!important}footer{position:fixed;left:0;right:0;bottom:0;margin:0;padding:7px 0 0;border-top:1.5px solid #394337;background:#fff;font-size:7px}.trace{page-break-inside:avoid}.field-block{break-inside:avoid}tr{break-inside:avoid}a{color:#252d25;text-decoration:none}}
-</style></head><body><div class="paper"><header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR® | By Victor Mordekai</h3></header><main><div class="eyebrow">05 / revisão final · documento não editável</div><h2>Orçamento / romaneio</h2><div class="meta"><div><span>DE</span><strong>${esc(data.from || "") || "________________________________"}</strong></div><div><span>PARA</span><strong>${esc(data.to || "") || "________________________________"}</strong></div><div><span>DATA DA FEITURA</span><strong>${esc(data.generatedAt)}</strong></div></div>${contact}${production}${deadline}${option.priceTable ? `<div class="table-wrap"><div class="table-title">TABELA DE CUSTOS</div><table><thead><tr><th style="width:30%">ITEM / SERVIÇO</th><th style="width:9%">PROCESSOS</th><th style="width:9%">MÁQUINAS</th><th style="width:12%">TEMPO</th><th style="width:15%">VALOR UNIT.</th><th style="width:10%">QTD.</th><th style="width:15%">TOTAL</th></tr></thead><tbody>${rows || '<tr><td colspan="7">NENHUM ITEM COTADO.</td></tr>'}</tbody></table><div class="summary"><div><span>ITENS</span><strong>${data.items.length}</strong></div><div><span>TEMPO TOTAL</span><strong>${number(data.items.reduce((s,i)=>s+(i.minutes/60)*i.quantity,0))}H</strong></div><div><span>TOTAL</span><strong>${money(data.total)}</strong></div></div></div>` : ""}<div class="trace"><strong>RASTREABILIDADE:</strong> ${esc(data.trackingId)}<br>GERADO LOCALMENTE · ${esc(data.generatedAt)} · FEITURA-GATE1-ROMANEIO-1.1</div>${consent}</main><footer><span><strong>RETEAR® ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA®</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer></div><script>
-const DATA=${JSON.stringify(data)};const consent=document.getElementById('lgpdConsent');const printButton=document.getElementById('printButton');const recordButton=document.getElementById('recordButton');if(consent&&printButton){consent.addEventListener('change',()=>{printButton.disabled=!consent.checked;});}function downloadRecord(){const payload={schema:'FEITURA-GATE1-TRACE-1.0',recordType:'FEITURA_GATE1_LOCAL_RECORD',trackingId:DATA.trackingId,generatedISO:DATA.generatedISO,generatedAt:DATA.generatedAt,pricingBasis:DATA.pricingBasis,hourly:DATA.pricingBasis==='hourly'?DATA.hourly:null,itemCount:DATA.items.length,items:DATA.items.map(i=>({key:i.key,name:i.name,minutes:i.minutes,quantity:i.quantity,calculatedUnitPrice:i.calculatedUnitPrice,unitPrice:i.unitPrice,total:i.total,basis:i.basis,customized:i.basis.includes('AJUSTADO')||i.basis==='VALOR PRÓPRIO'})),total:DATA.total,source:'FEITURA Gate 1.1 / revisão transitória',persistence:'local-download-only; future ingestion endpoint pending Gate 2'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=DATA.trackingId+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}recordButton?.addEventListener('click',downloadRecord);printButton?.addEventListener('click',()=>{downloadRecord();window.print();});
+@page{size:A4;margin:18mm 14mm 20mm}*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:"DM Sans",Arial,sans-serif;color:#171713;background:#eee9df;font-size:11px;line-height:1.45}body:before{content:"";display:block} .paper{max-width:900px;margin:24px auto;background:#fbfaf6;padding:34px 38px 54px;box-shadow:0 10px 40px rgba(23,23,19,.08)}header{border-bottom:4px solid #394337;padding-bottom:18px;margin-bottom:26px;color:#252d25}header h1{margin:0;font:700 30px/1 "DM Sans",Arial,sans-serif;letter-spacing:-.04em}header h2{margin:8px 0 0;font:600 12px/1.35 "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}header h3{margin:6px 0 0;font:500 10px "DM Mono",monospace;letter-spacing:.06em;text-transform:uppercase}main h2{margin:0 0 4px;font:400 25px/1.15 Georgia,serif;color:#171713}main>.eyebrow{font:600 9px "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#394337} .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;margin:18px 0 22px}.meta div{padding:13px;border-right:1px solid #cfc9bc;min-height:68px}.meta div:last-child{border-right:0}.meta span,.field-block h3{display:block;font:600 8px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#394337}.meta strong{display:block;margin-top:8px;font:500 10px "DM Mono",monospace;text-transform:uppercase;word-break:break-word}.field-block{margin:14px 0;padding:12px 14px;border:1px solid #d7d1c6}.field-block h3{margin:0 0 7px}.blank-line{font:500 10px "DM Mono",monospace}.blank-area{height:32px;border-bottom:1px solid #888}.table-wrap{margin-top:22px}.table-title{font:600 9px "DM Mono",monospace;letter-spacing:.08em;color:#394337;margin-bottom:8px}table{width:100%;border-collapse:collapse;border:1px solid #bfc0ba;table-layout:fixed}thead{display:table-header-group}th{background:#394337;color:#fbfaf6;text-align:left;font:600 8px "DM Mono",monospace;letter-spacing:.05em;padding:8px;text-transform:uppercase}td{padding:9px 8px;border-top:1px solid #d2d0c8;vertical-align:top;font:500 9px "DM Mono",monospace;word-break:break-word}td strong{display:block;font:700 10px Georgia,serif;color:#171713}td small{display:block;margin-top:3px;font:500 7px "DM Mono",monospace;color:#716f66}.summary{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #cfc9bc;border-top:0}.summary div{padding:13px;border-right:1px solid #cfc9bc}.summary div:last-child{border-right:0}.summary span{display:block;font:600 8px "DM Mono",monospace;color:#394337}.summary strong{display:block;margin-top:4px;font:400 18px Georgia,serif}.trace{margin-top:18px;padding:10px 12px;background:#eee9df;color:#252d25;font:500 8px "DM Mono",monospace;word-break:break-all}.validation{margin-top:28px;padding:18px;border:1px solid #394337;background:#eee9df;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.validation label{display:flex;gap:10px;align-items:flex-start;flex:1 1 58%;min-width:320px;font:500 9px/1.5 "DM Sans",Arial,sans-serif;color:#252d25}.validation input{margin-top:2px;accent-color:#394337}.validation button{border:0;background:#252d25;color:#fbfaf6;padding:11px 15px;font:600 9px "DM Mono",monospace;letter-spacing:.05em;cursor:pointer}.validation button:disabled{opacity:.35;cursor:not-allowed}.validation button#recordButton{background:transparent;color:#252d25;border:1px solid #252d25}.screen-note{margin:18px 0 0;color:#716f66;font:500 8px/1.5 "DM Mono",monospace}footer{margin-top:28px;padding-top:12px;border-top:2px solid #394337;color:#252d25;font:500 8px/1.5 "DM Mono",monospace;display:flex;justify-content:space-between;gap:20px}footer a{color:inherit}footer strong{font-weight:700} @media(max-width:700px){body{background:#fbfaf6}.paper{margin:0;padding:22px}.meta{grid-template-columns:1fr}.meta div{border-right:0;border-bottom:1px solid #cfc9bc}.meta div:last-child{border-bottom:0}.summary{grid-template-columns:1fr 1fr}.summary div{border-right:0;border-bottom:1px solid #cfc9bc}.summary div:nth-child(2n){border-left:1px solid #cfc9bc}.summary div:last-child{grid-column:1/-1}footer{display:block}.validation button{width:100%}} @media print{body{background:#fff}.paper{max-width:none;margin:0;padding:0;box-shadow:none}header{margin-bottom:20px}.validation,.screen-note{display:none!important}footer{position:fixed;left:0;right:0;bottom:0;margin:0;padding:7px 0 0;border-top:1.5px solid #394337;background:#fff;font-size:7px}.trace{page-break-inside:avoid}.field-block{break-inside:avoid}tr{break-inside:avoid}a{color:#252d25;text-decoration:none}}
+</style></head><body><div class="paper"><header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR® | By Victor Mordekai</h3></header><main><div class="eyebrow">05 / revisão final · documento não editável</div><h2>Orçamento / romaneio</h2><div class="meta"><div><span>DE</span><strong>${esc(data.from || "") || "________________________________"}</strong></div><div><span>PARA</span><strong>${esc(data.to || "") || "________________________________"}</strong></div><div><span>DATA DA FEITURA</span><strong>${esc(data.generatedAt)}</strong></div></div>${contact}${production}${deadline}${option.priceTable ? `<div class="table-wrap"><div class="table-title">TABELA DE CUSTOS</div><table><thead><tr><th style="width:24%">ITEM / SERVIÇO</th><th style="width:8%">PROCESSOS</th><th style="width:8%">MÁQUINAS</th><th style="width:10%">TEMPO</th><th style="width:11%">MAT. PRIMA<br>UNIT.</th><th style="width:11%">OPERAÇÃO<br>UNIT.</th><th style="width:9%">QTD.</th><th style="width:13%">TOTAL</th></tr></thead><tbody>${rows || '<tr><td colspan="8">NENHUM ITEM COTADO.</td></tr>'}</tbody></table><div class="summary"><div><span>ITENS</span><strong>${data.items.length}</strong></div><div><span>TEMPO TOTAL</span><strong>${number(data.items.reduce((s,i)=>s+(i.minutes/60)*i.quantity,0))}H</strong></div><div><span>MATÉRIA-PRIMA</span><strong>${money(data.materialTotal)}</strong></div><div><span>VALOR OPERACIONAL</span><strong>${money(data.operationalTotal)}</strong></div><div><span>TOTAL</span><strong>${money(data.total)}</strong></div></div></div>` : ""}<div class="trace"><strong>RASTREABILIDADE:</strong> ${esc(data.trackingId)}<br>GERADO LOCALMENTE · ${esc(data.generatedAt)} · FEITURA-GATE1-ROMANEIO-1.2</div>${consent}</main><footer><span><strong>RETEAR® ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA®</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer></div><script>
+const DATA=${JSON.stringify(data)};const consent=document.getElementById('lgpdConsent');const printButton=document.getElementById('printButton');const recordButton=document.getElementById('recordButton');if(consent&&printButton){consent.addEventListener('change',()=>{printButton.disabled=!consent.checked;});}function downloadRecord(){const payload={schema:'FEITURA-GATE1-TRACE-1.1',recordType:'FEITURA_GATE1_LOCAL_RECORD',trackingId:DATA.trackingId,generatedISO:DATA.generatedISO,generatedAt:DATA.generatedAt,pricingBasis:DATA.pricingBasis,hourly:DATA.pricingBasis==='hourly'?DATA.hourly:null,itemCount:DATA.items.length,items:DATA.items.map(i=>({key:i.key,name:i.name,minutes:i.minutes,processes:i.processes,machines:i.machines,quantity:i.quantity,materialUnitPrice:i.materialUnitPrice,operationalUnitPrice:i.operationalUnitPrice,calculatedOperationalUnitPrice:i.calculatedOperationalUnitPrice,observations:i.observations||"",methodVariables:i.methodVariables||"",materialTotal:i.materialTotal,operationalTotal:i.operationalTotal,total:i.total,basis:i.basis,customized:i.basis.includes('AJUSTADO')||i.basis==='VALOR PRÓPRIO'})),materialTotal:DATA.materialTotal,operationalTotal:DATA.operationalTotal,total:DATA.total,source:'FEITURA Gate 1.7.3.3 / revisão transitória',persistence:'local-download-only; future ingestion endpoint pending Gate 2'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=DATA.trackingId+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}recordButton?.addEventListener('click',downloadRecord);printButton?.addEventListener('click',()=>{downloadRecord();window.print();});
 </script></body></html>`;
 }
 
@@ -392,7 +494,7 @@ function exportCatalog(root,state,format){
   const data = payload(state);
   if(format === "json") return exportFile(`${data.trackingId}.json`,JSON.stringify(data,null,2),"application/json;charset=utf-8");
   if(format === "html") return exportFile(`suafeitura-${data.trackingId}.html`,buildHtml(data,false),"text/html;charset=utf-8");
-  const lines = [["FEITURA: ORÇAMENTO / ROMANEIO"],["RASTREABILIDADE",data.trackingId],["GERADO EM",data.generatedAt],["DE",data.from],["PARA",data.to],["REFERÊNCIA",data.pricingBasis === "hourly" ? "VALOR/HORA" : "VALOR PADRÃO"],["VALOR/HORA",data.hourly ? data.hourly.toFixed(2) : ""],[],["ITEM","PROCESSOS","MÁQUINAS","TEMPO MIN.","VALOR UNIT.","QUANTIDADE","TOTAL"],...data.items.map(i=>[i.name,i.variables?.processes||"",i.variables?.machines||"",i.minutes.toFixed(2),i.unitPrice.toFixed(2),i.quantity,i.total.toFixed(2)]),[],["TOTAL","","","",data.total.toFixed(2)]];
+  const lines = [["FEITURA: ORÇAMENTO / ROMANEIO"],["RASTREABILIDADE",data.trackingId],["GERADO EM",data.generatedAt],["DE",data.from],["PARA",data.to],["REFERÊNCIA",data.pricingBasis === "hourly" ? "VALOR/HORA" : "VALOR PADRÃO"],["VALOR/HORA",data.hourly ? data.hourly.toFixed(2) : ""],[],["ITEM","PROCESSOS","MÁQUINAS","TEMPO MIN.","MAT. PRIMA UNIT.","OPERAÇÃO UNIT.","QUANTIDADE","TOTAL"],...data.items.map(i=>[i.name,i.processes||"",i.machines||"",i.minutes.toFixed(2),i.materialUnitPrice.toFixed(2),i.operationalUnitPrice.toFixed(2),i.quantity,i.total.toFixed(2)]),[],["MATÉRIA-PRIMA TOTAL","","","",data.materialTotal.toFixed(2)],["VALOR OPERACIONAL TOTAL","","","",data.operationalTotal.toFixed(2)],["TOTAL","","","","","","",data.total.toFixed(2)]];
   exportFile(`${data.trackingId}.csv`,"\uFEFF"+lines.map(row=>row.map(csv).join(";")).join("\n"),"text/csv;charset=utf-8");
 }
 
@@ -422,17 +524,47 @@ export function initGlossary(){
     root.addEventListener("input",event=>{
       const t=event.target;
       if(t.matches("[data-glossary-search]")){renderGlossary(root,state);return;}
-      if(t.matches("[name=hourly]")){state.hourly=Number(t.value)||0;state.customPrices.clear();renderGlossary(root,state);renderResults(root,state);return;}
+      if(t.matches("[name=hourly]")){state.hourly=Number(t.value)||0;state.customPrices.clear();state.customOperationalPrices.clear();renderGlossary(root,state);renderResults(root,state);return;}
       if(t.matches("[data-document-from], [data-document-to]")){return;}
       if(t.matches("[data-formula-x], [data-formula-a], [data-formula-b], [data-formula-f]")){solveFormula(root);return;}
-      if(t.matches("[data-item-quantity]")){const key=t.dataset.itemQuantity; if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(1,Number(t.value)||1)}else state.quantities.set(key,Math.max(1,Number(t.value)||1)); renderResults(root,state);return;}
-      if(t.matches("[data-item-price]")){const key=t.dataset.itemPrice;const value=Number(t.value)||0;if(value>0)state.customPrices.set(key,value);else state.customPrices.delete(key);renderResults(root,state);renderGlossary(root,state);return;}
+      if(t.matches("[data-config-field]")){
+        const key=state.activeConfigKey, field=t.dataset.configField;
+        if(!key) return;
+        if(field==="quantity"){ if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(1,Number(t.value)||1)}else state.quantities.set(key,Math.max(1,Number(t.value)||1)); }
+        if(field==="minutes") state.customMinutes.set(key,Math.max(0,Number(t.value)||0));
+        if(field==="processes") state.customProcesses.set(key,Math.max(0,Number(t.value)||0));
+        if(field==="machines") state.customMachines.set(key,Math.max(0,Number(t.value)||0));
+        if(field==="materialUnitPrice") state.customMaterialPrices.set(key,Math.max(0,Number(t.value)||0));
+        if(field==="operationalUnitPrice") state.customOperationalPrices.set(key,Math.max(0,Number(t.value)||0));
+        if(field==="observation") state.customObservations.set(key,t.value);
+        if(field==="variables") state.customMethodVariables.set(key,t.value);
+        renderResults(root,state); return;
+      }
+      if(t.matches("[data-item-quantity]")){const key=t.dataset.itemQuantity;if(key.startsWith("custom:")){const i=Number(key.split(":")[1]);if(state.customRows[i])state.customRows[i].quantity=Math.max(1,Number(t.value)||1)}else state.quantities.set(key,Math.max(1,Number(t.value)||1));renderResults(root,state);return;}
+      if(t.matches("[data-item-minutes]")){state.customMinutes.set(t.dataset.itemMinutes,Math.max(0,Number(t.value)||0));renderResults(root,state);return;}
+      if(t.matches("[data-item-processes]")){state.customProcesses.set(t.dataset.itemProcesses,t.value);renderResults(root,state);return;}
+      if(t.matches("[data-item-machines]")){state.customMachines.set(t.dataset.itemMachines,t.value);renderResults(root,state);return;}
+      if(t.matches("[data-item-material-price]")){state.customMaterialPrices.set(t.dataset.itemMaterialPrice,Math.max(0,Number(t.value)||0));renderResults(root,state);return;}
+      if(t.matches("[data-item-operational-price]")){state.customOperationalPrices.set(t.dataset.itemOperationalPrice,Math.max(0,Number(t.value)||0));renderResults(root,state);return;}
+      if(t.matches("[data-item-price]")){const key=t.dataset.itemPrice;const value=Number(t.value)||0;state.customPrices.set(key,Math.max(0,value));state.customOperationalPrices.set(key,Math.max(0,value));renderResults(root,state);renderGlossary(root,state);return;}
     });
     root.addEventListener("change",event=>{
       const t=event.target;
       if(t.matches("[data-glossary-filter]")){renderGlossary(root,state);return;}
       if(t.matches("input[name=pricingBasis]")){state.pricingBasis=t.value;renderGlossary(root,state);renderResults(root,state);return;}
-      if(t.matches("[data-glossary-check]")){const item=t.closest("[data-glossary-item]");if(!item)return;if(t.checked){state.selected.add(item.dataset.key);if(!state.quantities.has(item.dataset.key))state.quantities.set(item.dataset.key,1)}else{state.selected.delete(item.dataset.key);state.quantities.delete(item.dataset.key);state.customPrices.delete(item.dataset.key)}renderGlossary(root,state);renderResults(root,state);return;}
+      if(t.matches("[data-glossary-check]")){const item=t.closest("[data-glossary-item]");if(!item)return;if(t.checked){
+        const key=item.dataset.key;
+        const record=records().find(r=>r.key===key);
+        state.selected.add(key);
+        if(!state.quantities.has(key))state.quantities.set(key,1);
+        if(!state.customProcesses.has(key))state.customProcesses.set(key,1);
+        if(!state.customMachines.has(key))state.customMachines.set(key,1);
+        if(!state.customMinutes.has(key))state.customMinutes.set(key,minutesFor(record||{}));
+        if(!state.customMaterialPrices.has(key))state.customMaterialPrices.set(key,0);
+        if(!state.customObservations.has(key))state.customObservations.set(key,record?.notes || "");
+        if(!state.customMethodVariables.has(key))state.customMethodVariables.set(key,"");
+        state.activeConfigKey=key;
+      }else{state.selected.delete(item.dataset.key);state.quantities.delete(item.dataset.key);state.customPrices.delete(item.dataset.key);state.customProcesses.delete(item.dataset.key);state.customMachines.delete(item.dataset.key);state.customMinutes.delete(item.dataset.key);state.customMaterialPrices.delete(item.dataset.key);state.customOperationalPrices.delete(item.dataset.key);state.customObservations.delete(item.dataset.key);state.customMethodVariables.delete(item.dataset.key);if(state.activeConfigKey===item.dataset.key)state.activeConfigKey=""}renderGlossary(root,state);renderResults(root,state);return;}
       if(t.matches("[data-include-contact]"))state.include.contact=t.checked;
       if(t.matches("[data-include-price-table]"))state.include.priceTable=t.checked;
       if(t.matches("[data-include-production]"))state.include.production=t.checked;
@@ -440,13 +572,15 @@ export function initGlossary(){
       if(t.matches("[data-formula-unknown]"))solveFormula(root);
     });
     root.addEventListener("click",event=>{
+      const configure=event.target.closest("[data-configure-row]"); if(configure){state.activeConfigKey=configure.dataset.configureRow;renderResults(root,state);root.querySelector("[data-quote-config-panel]")?.scrollIntoView({behavior:"smooth",block:"nearest"});return;}
+      if(event.target.closest("[data-close-quote-config]")){state.activeConfigKey="";renderResults(root,state);return;}
       const referenceDetail=event.target.closest("[data-reference-details]"); if(referenceDetail){const panel=root.querySelector("[data-reference-panel]");if(panel){const open=referenceDetail.getAttribute("aria-expanded")==="true";referenceDetail.setAttribute("aria-expanded",String(!open));panel.hidden=open;}return;}
       const methodRef=event.target.closest("[data-method-ref]"); if(methodRef){openMethodReference(root,state,methodRef.dataset.methodRef);return;}
       if(event.target.closest("[data-method-ref-close]")){closeMethodReference(root);return;}
       if(event.target.closest("[data-method-ref-add]")){addMethodReference(root,state);return;}
       const detail=event.target.closest("[data-glossary-detail]"); if(detail){const panel=detail.closest("[data-glossary-item]")?.querySelector(".glossary-detail-panel");if(panel){const open=detail.getAttribute("aria-expanded")==="true";detail.setAttribute("aria-expanded",String(!open));panel.hidden=open}return;}
       if(event.target.closest("[data-quote-visible]")){filteredRecords(root).filter(i=>i.quoteable).forEach(item=>{state.selected.add(item.key);if(!state.quantities.has(item.key))state.quantities.set(item.key,1)});renderGlossary(root,state);renderResults(root,state);root.querySelector(".quote-document")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
-      if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customPrices.clear();state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}
+      if(event.target.closest("[data-clear-selection]")){state.selected.clear();state.quantities.clear();state.customPrices.clear();state.customMinutes.clear();state.customProcesses.clear();state.customMachines.clear();state.customMaterialPrices.clear();state.customOperationalPrices.clear();state.customObservations.clear();state.customMethodVariables.clear();state.customProcesses.clear();state.customMachines.clear();state.customMinutes.clear();state.activeConfigKey="";state.customRows=[];renderGlossary(root,state);renderResults(root,state);return;}
       const remove=event.target.closest("[data-remove-custom]"); if(remove){const index=Number(remove.dataset.removeCustom.split(":")[1]);if(Number.isInteger(index))state.customRows.splice(index,1);renderResults(root,state);return;}
       if(event.target.closest("[data-open-review]")){openReview(root,state);return;}
       if(event.target.closest("[data-export-catalog]")){exportCatalog(root,state,"csv");return;}
