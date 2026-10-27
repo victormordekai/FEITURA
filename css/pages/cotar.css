@@ -44,7 +44,7 @@
 .quote-document-table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--white)}
 .quote-document-table{width:100%;min-width:680px;border-collapse:collapse;font-size:.76rem}
 .quote-document-table th,.quote-document-table td{padding:15px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
-.quote-document-table th{background:var(--paper-deep);font:600 .61rem "DM Mono",monospace;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}.quote-document-table .quote-group-row th{background:var(--olive);color:var(--white);padding:10px 16px;font-size:.62rem;letter-spacing:.09em;text-align:left;border-bottom:1px solid var(--olive-dark)}
+.quote-document-table th{background:var(--paper-deep);font:600 .61rem "DM Mono",monospace;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .quote-document-table td strong{display:block;font-weight:600}.quote-document-table td small{display:block;margin-top:4px;font:400 .61rem "DM Mono",monospace;color:var(--muted)}
 .quote-document-table td:nth-child(2),.quote-document-table td:nth-child(3),.quote-document-table td:nth-child(4){white-space:nowrap;font-family:"DM Mono",monospace}
 .quote-row-remove{border:0;background:none;padding:4px 0;color:var(--muted);font:600 .6rem "DM Mono",monospace;text-transform:uppercase;cursor:pointer}.quote-row-remove:hover{color:var(--ink)}
