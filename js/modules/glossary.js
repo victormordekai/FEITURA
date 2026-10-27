@@ -69,7 +69,7 @@ function renderRecord(item,state){
   const mins = minutesFor(item);
   const standard = standardPriceFor(item);
   return `<article class="glossary-item${selected ? " is-selected" : ""}${item.quoteable ? "" : " is-reference"}" data-glossary-item data-key="${esc(item.key)}">
-    ${item.quoteable ? `<label class="glossary-select" aria-label="Selecionar ${esc(item.label)} para a tabela de custos"><input type="checkbox" data-glossary-check ${selected ? "checked" : ""}><span aria-hidden="true"></span></label>` : `<span class="glossary-reference-mark mono">MÉTODO</span>`}
+    ${item.quoteable ? `<label class="glossary-select" aria-label="Selecionar ${esc(item.label)} para a tabela de custos"><input type="checkbox" data-glossary-check ${selected ? "checked" : ""}><span aria-hidden="true"></span></label>` : ""}
     <div class="glossary-item-main">
       <div class="glossary-item-top"><span class="mono">${esc(item.groupLabel)}</span><span class="glossary-category">${esc(item.category || "")}</span></div>
       <h3>${esc(item.label)}</h3>
