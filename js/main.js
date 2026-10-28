@@ -8,6 +8,7 @@ import {initGlossary} from "./modules/glossary.js";
 import {initVisitorCounter} from "./modules/counter.js";
 import {initDocumentHud} from "./modules/hud-document.js";
 import {initFooter} from "./modules/footer.js";
+import {initQuoteConfig} from "./modules/quote-config.js";
 
 document.addEventListener("DOMContentLoaded",()=>{
   initNavigation();
@@ -20,4 +21,5 @@ document.addEventListener("DOMContentLoaded",()=>{
   initVisitorCounter();
   initDocumentHud();
   initFooter();
+  initQuoteConfig();
 });
