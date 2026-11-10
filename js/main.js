@@ -4,11 +4,10 @@ import {initReveal} from "./modules/reveal.js";
 import {initEstimators} from "./modules/estimator.js";
 import {initCapacity} from "./modules/capacity.js";
 import {initDemoActions} from "./modules/demo.js";
-import {initGlossary} from "./modules/glossary.js";
+import {initQuote} from "./modules/quote/index.js";
 import {initVisitorCounter} from "./modules/counter.js";
 import {initDocumentHud} from "./modules/hud-document.js";
 import {initFooter} from "./modules/footer.js";
-import {initQuoteConfig} from "./modules/quote-config.js";
 
 document.addEventListener("DOMContentLoaded",()=>{
   initNavigation();
@@ -17,9 +16,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   initEstimators();
   initCapacity();
   initDemoActions();
-  initGlossary();
+  initQuote();
   initVisitorCounter();
   initDocumentHud();
   initFooter();
-  initQuoteConfig();
 });
