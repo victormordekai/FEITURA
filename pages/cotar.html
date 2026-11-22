@@ -318,6 +318,16 @@
             <button type="button" data-mode="contractor" aria-pressed="false">CONTRATO · ROMANEIO<small>Informo o preço-alvo por unidade; a FEITURA mostra a hora implícita e monta o romaneio.</small></button>
           </div>
 
+          <div class="quote-import">
+            <div class="quote-import-text">
+              <strong>Já tem uma FEITURA anterior?</strong>
+              <span>Suba o registro (.json) e a cotação volta preenchida: empresa, cliente, prazos, serviços de rotina e a data da FEITURA.</span>
+            </div>
+            <button type="button" class="button button-dark" data-import-record>SUBIR REGISTRO DE FEITURA</button>
+            <input type="file" accept=".json,application/json" data-import-file hidden>
+            <p class="quote-import-status" data-import-status role="status" aria-live="polite"></p>
+          </div>
+
           <p class="form-note" data-show-in="producer">O valor-hora é atributo de quem produz e fica restrito ao seu orçamento.</p>
           <p class="form-note" data-show-in="contractor" hidden>Quem contrata negocia por artigo, quantidade e preço por unidade. O romaneio não pede nem expõe valor-hora de prestadoras.</p>
 
@@ -426,7 +436,7 @@
           <div class="document-meta-fields">
             <label><span>DE</span><input type="text" data-document-from placeholder="PREENCHER OU ESCREVER NA VERSÃO IMPRESSA"></label>
             <label><span>PARA</span><input type="text" data-document-to placeholder="PREENCHER OU ESCREVER NA VERSÃO IMPRESSA"></label>
-            <div class="document-generated"><span>DATA DA FEITURA</span><strong data-generated-at>AINDA NÃO GERADO</strong></div>
+            <div class="document-generated"><span>DATA DA FEITURA</span><strong data-generated-at>AINDA NÃO GERADO</strong><button type="button" class="text-button" data-date-today hidden>USAR DATA DE HOJE</button></div>
           </div>
 
           <div class="quote-document-table-wrap">
@@ -493,13 +503,13 @@
             </div>
           </div>
           <div class="hud-document-anchor" data-document-hud-anchor>
-            <div class="hud-document-actions" data-document-hud aria-hidden="true">
+            <div class="hud-document-actions" data-document-hud data-hud-priority="10" aria-hidden="true">
               <button type="button" class="button-hud button-dark" data-open-review>REVISAR E VALIDAR DOCUMENTO</button>
             </div>
           </div>
           <div class="document-actions-secondary">
             <button type="button" class="button button-dark" data-export="csv">BAIXAR CSV</button>
-            <button type="button" class="text-button" data-export="json">BAIXAR JSON</button>
+            <button type="button" class="text-button" data-export="json">BAIXAR REGISTRO (.JSON)</button>
             <button type="button" class="text-button" data-export="html">BAIXAR DOCUMENTO HTML</button>
           </div>
         </section>
