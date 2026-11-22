@@ -406,3 +406,15 @@ input[type="text"],input[type="search"],textarea{text-transform:uppercase}
   .quote-document-table th:last-child,.quote-document-table td:last-child{display:none}
 }
 .start-reference-fields{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+
+
+/* SUBIR REGISTRO DE FEITURA: reaproveita uma cotação anterior (.json). */
+.quote-import{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin:22px 0 6px;padding:16px 18px;border:1px dashed var(--line);background:var(--cream)}
+.quote-import-text{flex:1 1 320px;display:flex;flex-direction:column;gap:4px}
+.quote-import-text strong{font:600 .8rem "DM Sans",sans-serif;color:var(--ink)}
+.quote-import-text span{font-size:.74rem;line-height:1.5;color:var(--muted)}
+.quote-import-status{flex:1 1 100%;margin:0;font:500 .62rem "DM Mono",monospace;letter-spacing:.04em;color:var(--olive)}
+.quote-import-status:empty{display:none}
+.document-generated [data-date-today]{display:block;margin-top:6px;font-size:.6rem}
+@media(max-width:640px){.quote-import .button{width:100%}}
+@media print{.quote-import{display:none}}
