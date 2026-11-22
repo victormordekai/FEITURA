@@ -6,8 +6,11 @@ import { localDateTime, minSec } from "./format.js";
 import { MODES } from "./pricing.js";
 import { documentHtml } from "./document-template.js";
 
-const SCHEMA = "FEITURA-GATE1-DOCUMENTO-1.3";
-export const APP_VERSION = "GATE 1.8.0";
+const SCHEMA = "FEITURA-GATE1-DOCUMENTO-1.4";
+export const APP_VERSION = "GATE 1.9.0";
+
+/** Chave da revisão em andamento: a página documento.html lê daqui (mesmo navegador, mesmo site). */
+export const REVIEW_KEY = "feitura:revisao";
 
 /** Assinatura curta (FNV-1a) do conteúdo econômico do documento. */
 function fingerprint(items) {
@@ -80,7 +83,16 @@ export function buildPayload(state, rows, fields) {
     materialTotal: sum("materialTotal"),
     operationalTotal: sum("operationalTotal"),
     total,
-    persistence: "local-download-only; ingestion endpoint pending Gate 2"
+    persistence: "local-download-only; ingestion endpoint pending Gate 2",
+    // Estado completo para "SUBIR REGISTRO DE FEITURA": refaz a cotação como estava.
+    restore: {
+      mode: state.mode,
+      hourly: state.hourly,
+      pricingBasis: state.pricingBasis,
+      provider: state.provider,
+      include: { ...state.include },
+      lines: [...state.lines.values()].map(line => ({ ...line }))
+    }
   };
 }
 
@@ -120,20 +132,25 @@ function toCsv(data) {
 
 export function exportDocument(data, format) {
   if (format === "json") return download(`${data.trackingId}.json`, JSON.stringify(data, null, 2), "application/json;charset=utf-8");
-  if (format === "html") return download(`suafeitura-${data.trackingId}.html`, documentHtml(data, { review: false }), "text/html;charset=utf-8");
+  if (format === "html") return download(`suafeitura-${data.trackingId}.html`, documentHtml(data), "text/html;charset=utf-8");
   return download(`${data.trackingId}.csv`, toCsv(data), "text/csv;charset=utf-8");
 }
 
-/** Abre a revisão transitória em nova aba; sem pop-up permitido, baixa o HTML. */
+/**
+ * Abre a revisão em pages/documento.html (página real do site).
+ * Antes, a revisão era um endereço blob: temporário, revogado em 60 s; no celular
+ * a impressão recarrega a página e encontrava o endereço já apagado: folha em branco.
+ */
 export function openReview(data) {
-  const html = documentHtml(data, { review: true });
-  const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
-  const win = window.open(url, "_blank");
-  if (!win) {
-    URL.revokeObjectURL(url);
-    download(`${data.trackingId}.html`, html, "text/html;charset=utf-8");
+  try {
+    localStorage.setItem(REVIEW_KEY, JSON.stringify(data));
+  } catch {
+    // Sem armazenamento local (modo privado restrito): entrega o documento para baixar.
+    download(`suafeitura-${data.trackingId}.html`, documentHtml(data), "text/html;charset=utf-8");
     return;
   }
-  win.opener = null;
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  const url = new URL("documento.html", window.location.href);
+  url.hash = data.trackingId;
+  const win = window.open(url.href, "_blank");
+  if (!win) window.location.assign(url.href); // pop-up bloqueado: abre na mesma aba
 }
