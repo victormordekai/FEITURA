@@ -1,23 +1,26 @@
-// FEITURA · documento autocontido (revisão transitória e HTML exportado).
+// FEITURA · documento: revisão (pages/documento.html) e HTML exportado autocontido.
 // Precisa funcionar fora do site, por isso o CSS segue embutido no arquivo gerado.
 
 import { duration, esc, minSec, money, number } from "./format.js";
 import { MODES } from "./pricing.js";
 
-const STYLE = `
+export const STYLE = `
+@font-face{font-family:"Feitura Display Prototype";src:url("https://victormordekai.github.io/FEITURA/assets/fonts/feitura-fonte.otf") format("opentype");font-weight:400;font-style:normal;font-display:swap}
 @page{size:A4;margin:18mm 14mm 20mm}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{font-family:"DM Sans",Arial,sans-serif;color:#171713;background:#eee9df;font-size:11px;line-height:1.45}
 .paper{max-width:900px;margin:24px auto;background:#fbfaf6;padding:34px 38px 54px;box-shadow:0 10px 40px rgba(23,23,19,.08)}
 header{border-bottom:4px solid #394337;padding-bottom:18px;margin-bottom:26px;color:#252d25}
-header h1{margin:0;font:700 30px/1 "DM Sans",Arial,sans-serif;letter-spacing:-.04em}
+header h1{margin:0;font:400 36px/1 "Feitura Display Prototype","DM Sans",Arial,sans-serif;letter-spacing:0;color:#394337}
+header h1 sup{font:500 .3em "DM Mono",monospace;vertical-align:top;margin-left:3px;color:#394337}
 header h2{margin:8px 0 0;font:600 12px/1.35 "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
 header h3{margin:6px 0 0;font:500 10px "DM Mono",monospace;letter-spacing:.06em;text-transform:uppercase}
 .review-title{display:flex;justify-content:space-between;gap:24px;align-items:flex-end}
 .review-provider{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
 .review-provider span{font:600 8px "DM Mono",monospace;letter-spacing:.08em;color:#716f66}
 .review-provider strong{margin-top:6px;font:500 10px "DM Mono",monospace;text-transform:uppercase;overflow-wrap:anywhere}
+.review-provider strong.is-named{margin:4px 0 0;font:400 25px/1.15 Georgia,serif;text-transform:none;letter-spacing:0;color:#171713}
 main h2{margin:0 0 4px;font:400 25px/1.15 Georgia,serif;color:#171713}
 .eyebrow{font:600 9px "DM Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#394337}
 .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #cfc9bc;margin:18px 0 22px}
@@ -49,24 +52,37 @@ td small{display:block;margin-top:3px;font:500 7px "DM Mono",monospace;color:#71
 .validation button{border:0;background:#252d25;color:#fbfaf6;padding:11px 15px;font:600 9px "DM Mono",monospace;letter-spacing:.05em;cursor:pointer}
 .validation button:disabled{opacity:.35;cursor:not-allowed}
 .validation .secondary{background:transparent;color:#252d25;border:1px solid #252d25}
+.validation .actions{display:flex;gap:8px;flex-wrap:wrap}
+.validation .status{flex:1 1 100%;margin:0;font:500 9px "DM Mono",monospace;color:#394337;min-height:12px}
+.empty{max-width:560px;margin:80px auto;padding:24px;font:500 12px/1.6 "DM Sans",Arial,sans-serif;text-align:center}
+.empty a{color:#394337}
 footer{margin-top:28px;padding-top:12px;border-top:2px solid #394337;color:#252d25;font:500 8px/1.5 "DM Mono",monospace;display:flex;justify-content:space-between;gap:20px}
 footer a{color:inherit}
 @media(max-width:700px){
   body{background:#fbfaf6}.paper{margin:0;padding:22px}
   .review-title{align-items:flex-start;flex-direction:column}.review-provider{align-items:flex-start;text-align:left}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.table-wrap table{min-width:640px}.summary{min-width:0}
   .meta{grid-template-columns:1fr}.meta div{border-right:0;border-bottom:1px solid #cfc9bc}.meta div:last-child{border-bottom:0}
   .summary{grid-template-columns:1fr 1fr}.summary div{border-right:0;border-bottom:1px solid #cfc9bc}.summary div:nth-child(2n){border-left:1px solid #cfc9bc}.summary div:last-child{grid-column:1/-1}
-  footer{display:block}.validation button{width:100%}
+  footer{display:block}.validation .actions{width:100%;flex-direction:column}.validation button{width:100%}
+  .review-provider strong.is-named{font-size:21px}
 }
 @media print{
   body{background:#fff}.paper{max-width:none;margin:0;padding:0;box-shadow:none}
   .validation{display:none!important}
+  .table-wrap{overflow:visible}.table-wrap table{min-width:0}
   footer{position:fixed;left:0;right:0;bottom:0;margin:0;padding:7px 0 0;border-top:1.5px solid #394337;background:#fff;font-size:7px}
   .trace,.field-block,tr{break-inside:avoid}
   a{color:#252d25;text-decoration:none}
 }`;
 
 const BLANK = "________________________________";
+
+/** "2026-11-23" (campo de data) → "23/11/2026". Outros formatos passam como vieram. */
+const brDate = value => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : String(value || "");
+};
 
 function itemRow(i, producer) {
   const notes = [
@@ -106,41 +122,31 @@ function optionalBlocks(data) {
   return [
     o.contact ? `<section class="field-block"><h3>DADOS DE CONTATO E ENDEREÇO</h3><div class="blank-line">______________________________________________</div></section>` : "",
     o.production ? `<section class="field-block"><h3>SOLICITAÇÃO DE PRODUÇÃO</h3><div class="blank-area">&nbsp;</div></section>` : "",
-    o.deadline ? `<section class="field-block"><h3>PRAZO VIGENTE</h3><p>${esc(data.deadlineFrom || "____/____/________")} A ${esc(data.deadlineTo || "____/____/________")}</p></section>` : "",
+    o.deadline ? `<section class="field-block"><h3>PRAZO VIGENTE</h3><p>${esc(brDate(data.deadlineFrom) || "____/____/________")} A ${esc(brDate(data.deadlineTo) || "____/____/________")}</p></section>` : "",
     o.priceTable ? priceTable(data) : ""
   ].join("");
 }
 
 const VALIDATION = `<div class="validation">
-  <label><input id="consent" type="checkbox"><span>Declaro que compreendo que os dados utilizados nesta revisão são tratados como dados públicos ou informações fornecidas para a composição do documento. Concordo com o manuseio necessário à geração e impressão deste documento, observados os princípios aplicáveis da LGPD.</span></label>
-  <button id="print" type="button" disabled>VALIDAR E IMPRIMIR</button>
-  <button id="record" class="secondary" type="button">BAIXAR REGISTRO</button>
+  <label><input id="consent" type="checkbox"><span>Declaro que compreendo que os dados utilizados nesta revisão são tratados como dados públicos ou informações fornecidas para a composição do documento. Concordo com o manuseio necessário à geração, impressão e compartilhamento deste documento, observados os princípios aplicáveis da LGPD.</span></label>
+  <div class="actions">
+    <button id="print" type="button" disabled>VALIDAR E IMPRIMIR</button>
+    <button id="share" type="button" disabled>COMPARTILHAR PDF AGORA</button>
+    <button id="record" class="secondary" type="button">BAIXAR REGISTRO</button>
+  </div>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
 </div>`;
 
-// Script mínimo da revisão: libera a impressão após o consentimento e baixa o registro JSON.
-const REVIEW_SCRIPT = `
-const consent=document.getElementById("consent"),print=document.getElementById("print");
-consent.addEventListener("change",()=>{print.disabled=!consent.checked;});
-function record(){
-  const url=URL.createObjectURL(new Blob([JSON.stringify(RECORD,null,2)],{type:"application/json;charset=utf-8"}));
-  const a=Object.assign(document.createElement("a"),{href:url,download:RECORD.trackingId+".json"});
-  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-document.getElementById("record").addEventListener("click",record);
-print.addEventListener("click",()=>{record();window.print();});`;
-
-/** JSON seguro dentro de <script>: impede que um texto digitado feche a tag. */
-const scriptJson = value => JSON.stringify(value).replace(/</g, "\\u003c");
-
-export function documentHtml(data, { review }) {
+/** Conteúdo do documento (sem <html>): usado pela revisão (documento.html) e pelo HTML exportado. */
+export function documentBody(data, { review }) {
   const mode = MODES[data.mode];
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>sua FEITURA | ${esc(data.trackingId)}</title><style>${STYLE}</style></head><body><div class="paper">
+  const named = Boolean(data.providerName);
+  return `<div class="paper">
 <header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR® | By Victor Mordekai</h3></header>
 <main>
   <div class="review-title">
     <div><div class="eyebrow">${review ? "05 / revisão final · documento não editável" : "documento exportado"}</div><h2>${esc(mode.document)}</h2></div>
-    <div class="review-provider"><span>${mode.byline}</span><strong>${esc(data.providerName) || "SUA FEITURA"}</strong></div>
+    <div class="review-provider"><span>${mode.byline}</span><strong${named ? ' class="is-named"' : ""}>${esc(data.providerName) || "SUA FEITURA"}</strong></div>
   </div>
   <div class="meta">
     <div><span>DE</span><strong>${esc(data.from) || BLANK}</strong></div>
@@ -152,5 +158,11 @@ export function documentHtml(data, { review }) {
   ${review ? VALIDATION : ""}
 </main>
 <footer><span><strong>RETEAR® ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA®</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer>
-</div>${review ? `<script>const RECORD=${scriptJson(data)};${REVIEW_SCRIPT}</script>` : ""}</body></html>`;
+</div>`;
+}
+
+/** Documento autocontido para baixar (sem botões; funciona fora do site). */
+export function documentHtml(data) {
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>sua FEITURA | ${esc(data.trackingId)}</title><style>${STYLE}</style></head><body>${documentBody(data, { review: false })}</body></html>`;
 }
