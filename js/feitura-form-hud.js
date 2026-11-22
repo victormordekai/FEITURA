@@ -2,7 +2,14 @@
    Módulo autocontido: injeta o próprio estilo e o HUD flutuante.
    Uso: <script src=".../feitura-form-hud.js" defer></script>
    Opcional: data-form-url="..." na tag <script> para trocar o link do formulário.
-   Desligar numa página: <body data-feitura-form-hud="off">. */
+   Desligar numa página: <body data-feitura-form-hud="off">.
+
+   REGRA DE ESPAÇO DOS HUDs ("dois HUDs não ocupam o mesmo espaço"):
+   - Todo HUD fixo pode declarar data-hud-priority="N" (maior vence).
+     Sem declaração, HUDs de ação (ex.: REVISAR E VALIDAR DOCUMENTO) valem 10.
+   - Este HUD de convite vale 1: quando encosta em outro HUD visível, ele sobe;
+     se não houver altura, encolhe para o ícone; se ainda assim colidir, se esconde
+     até o espaço voltar. Vale para qualquer página, tela e HUD futuro. */
 (function () {
   'use strict';
   if (window.__feituraFormHud) return;
@@ -22,7 +29,9 @@
   }
 
   var css = [
-    '.ffh{position:fixed;left:20px;bottom:20px;z-index:950;font-family:"DM Mono",ui-monospace,monospace}',
+    '.ffh{position:fixed;left:20px;bottom:20px;z-index:950;font-family:"DM Mono",ui-monospace,monospace;transition:bottom .25s ease,opacity .2s ease}',
+    '.ffh.is-compact .ffh__txt{display:none}.ffh.is-compact .ffh__btn{padding:9px;border-radius:50%}.ffh.is-compact .ffh__x{display:none}',
+    '.ffh.is-yielded{opacity:0;pointer-events:none}',
     '.ffh__btn{display:flex;align-items:center;gap:12px;max-width:min(330px,calc(100vw - 40px));padding:12px 16px 12px 12px;',
     'border:1px solid rgba(251,250,246,.22);border-radius:2px;background:#252d25;color:#fbfaf6;cursor:pointer;text-align:left;',
     'box-shadow:0 14px 34px rgba(23,23,19,.28);transform-origin:20% 80%;animation:ffh-shake 5.5s ease-in-out 2.5s infinite}',
@@ -68,6 +77,7 @@
 
     var wrap = document.createElement('div');
     wrap.className = 'ffh';
+    wrap.setAttribute('data-hud-priority', '1');
     wrap.innerHTML =
       '<button class="ffh__btn" type="button" aria-haspopup="dialog" aria-controls="ffhPanel" data-campaign-hud>' +
         '<span class="ffh__ring">' + ICON + '</span>' +
@@ -131,6 +141,68 @@
       store(false, 'closed');
       wrap.remove();
     });
+
+    // ---------- regra de espaço ----------
+    var GAP = 12, BASE = parseFloat(getComputedStyle(wrap).bottom) || 20;
+    var OTHER = '[data-hud-priority], [data-document-hud], .hud-document-actions, [class*="hud"]';
+
+    function priorityOf(el) {
+      var p = el.getAttribute('data-hud-priority');
+      return p == null ? 10 : Number(p) || 0;
+    }
+    function isFixedVisible(el) {
+      var cs = getComputedStyle(el);
+      return cs.position === 'fixed' && cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity) > 0.05;
+    }
+    // Área real ocupada: união dos filhos visíveis (um contêiner largo pode ter só um botão à direita).
+    function boxOf(el) {
+      var kids = Array.prototype.filter.call(el.children, function (k) { var r = k.getBoundingClientRect(); return r.width && r.height; });
+      var rects = (kids.length ? kids : [el]).map(function (k) { return k.getBoundingClientRect(); });
+      return rects.reduce(function (a, r) {
+        return { left: Math.min(a.left, r.left), right: Math.max(a.right, r.right), top: Math.min(a.top, r.top), bottom: Math.max(a.bottom, r.bottom) };
+      }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
+    }
+    function rivals() {
+      var mine = priorityOf(wrap);
+      return Array.prototype.filter.call(document.querySelectorAll(OTHER), function (el) {
+        if (el === wrap || wrap.contains(el) || el.contains(wrap) || panel.contains(el)) return false;
+        if (el.closest('[data-hud-priority]') && el.closest('[data-hud-priority]') !== el) return false;
+        return priorityOf(el) >= mine && isFixedVisible(el);
+      }).map(boxOf).filter(function (b) { return b.right > b.left && b.bottom > 0 && b.top < innerHeight; });
+    }
+    function hits(a, b) { return a.left < b.right + GAP && a.right > b.left - GAP && a.top < b.bottom + GAP && a.bottom > b.top - GAP; }
+
+    function place() {
+      wrap.classList.remove('is-yielded');
+      var others = rivals();
+      ['full', 'compact'].some(function (mode) {
+        wrap.classList.toggle('is-compact', mode === 'compact');
+        var bottom = BASE;
+        for (var i = 0; i < 4; i++) {
+          wrap.style.bottom = bottom + 'px';
+          var me = wrap.querySelector('.ffh__btn').getBoundingClientRect();
+          var hit = others.filter(function (o) { return hits(me, o); })[0];
+          if (!hit) return true;                               // espaço livre: fica aqui
+          bottom = innerHeight - hit.top + GAP;                // sobe acima do HUD que tem prioridade
+          if (bottom + me.height > innerHeight * 0.55) break;  // sem altura: tenta o modo compacto
+        }
+        return false;
+      }) || wrap.classList.add('is-yielded');                  // nada coube: cede até o espaço voltar
+    }
+
+    var queued = false;
+    function schedule() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(function () { queued = false; if (document.body.contains(wrap)) place(); });
+    }
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    // Ignora as próprias mudanças do HUD (evita laço); reage às dos outros HUDs.
+    new MutationObserver(function (records) {
+      if (records.some(function (r) { return !wrap.contains(r.target) && !panel.contains(r.target); })) schedule();
+    }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
+    schedule();
 
     document.querySelectorAll('[data-feitura-form-open]').forEach(function (el) {
       el.addEventListener('click', function (e) { e.preventDefault(); open(); });
