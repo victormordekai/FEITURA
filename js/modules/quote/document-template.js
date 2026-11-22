@@ -65,7 +65,7 @@ footer a{color:inherit}
   .meta{grid-template-columns:1fr}.meta div{border-right:0;border-bottom:1px solid #cfc9bc}.meta div:last-child{border-bottom:0}
   .summary{grid-template-columns:1fr 1fr}.summary div{border-right:0;border-bottom:1px solid #cfc9bc}.summary div:nth-child(2n){border-left:1px solid #cfc9bc}.summary div:last-child{grid-column:1/-1}
   footer{display:block}.validation .actions{width:100%;flex-direction:column}.validation button{width:100%}
-  .review-provider strong.is-named{font-size:21px}
+  .review-provider strong.is-named{font-size:25px}
 }
 @media print{
   body{background:#fff}.paper{max-width:none;margin:0;padding:0;box-shadow:none}
