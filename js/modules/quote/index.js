@@ -17,6 +17,7 @@ import { createConfigurator } from "./view-configurator.js";
 import { LINE_FIELDS, patchDocument, renderDocument } from "./view-document.js";
 import { initFormula } from "./view-formula.js";
 import { buildPayload, exportDocument, openReview } from "./document-export.js";
+import { applyRecord, readRecordFile } from "./import-record.js";
 
 const MODE_PARAM = { produzo: "producer", contrato: "contractor" };
 const PARAM_OF = { producer: "produzo", contractor: "contrato" };
@@ -80,10 +81,53 @@ function initQuoteRoot(root) {
     };
   }
 
+  function showDate() {
+    $("[data-generated-at]").textContent = state.generatedAt || "AINDA NÃO GERADO";
+    const today = $("[data-date-today]");
+    if (today) today.hidden = !state.keepDate;
+  }
+
   function currentDocument() {
-    state.generatedAt = localDateTime(new Date());
-    $("[data-generated-at]").textContent = state.generatedAt;
+    // Registro importado mantém a DATA DA FEITURA original até a pessoa pedir a data de hoje.
+    if (!state.keepDate || !state.generatedAt) state.generatedAt = localDateTime(new Date());
+    showDate();
     return buildPayload(state, compute(state).rows, documentFields());
+  }
+
+  // ---------- subir registro ----------
+
+  /** Espelha o estado importado nos campos de tela que não são re-renderizados. */
+  function syncInputs(fields) {
+    const set = (sel, value) => { const el = $(sel); if (el) el.value = value; };
+    set("[name=hourly]", state.hourly ? String(state.hourly) : "");
+    set("[data-quote-provider]", state.provider);
+    root.querySelectorAll("input[name=pricingBasis]").forEach(r => { r.checked = r.value === state.pricingBasis; });
+    root.querySelectorAll("[data-include-option]").forEach(c => { c.checked = Boolean(state.include[c.dataset.includeOption]); });
+    const deadline = $("[data-deadline-fields]");
+    if (deadline) deadline.hidden = !state.include.deadline;
+    set("[data-deadline-from]", fields.deadlineFrom);
+    set("[data-deadline-to]", fields.deadlineTo);
+    set("[data-document-from]", fields.from);
+    set("[data-document-to]", fields.to);
+    showDate();
+  }
+
+  async function importRecord(input) {
+    const status = $("[data-import-status]");
+    const say = t => { if (status) status.textContent = t; };
+    try {
+      const record = await readRecordFile(input.files?.[0]);
+      const fields = applyRecord(state, record);
+      syncInputs(fields);
+      applyProvider();
+      applyMode();
+      say(`REGISTRO CARREGADO · ${fields.lines} ITEM(NS) · DATA DA FEITURA ${state.generatedAt || "—"}. CONFIRA E AJUSTE O QUE MUDOU.`);
+      scrollTo(root, "[data-document]");
+    } catch (err) {
+      say(String(err?.message || "NÃO FOI POSSÍVEL CARREGAR O REGISTRO.").toUpperCase());
+    } finally {
+      input.value = "";
+    }
   }
 
   // ---------- configurador ----------
@@ -121,10 +165,13 @@ function initQuoteRoot(root) {
     "[data-close-config]": () => { state.activeLineId = ""; renderAll(); },
     "[data-remove-line]": el => { removeLine(state, el.dataset.removeLine); renderAll(); },
     "[data-open-review]": () => openReview(currentDocument()),
+    "[data-import-record]": () => $("[data-import-file]")?.click(),
+    "[data-date-today]": () => { state.keepDate = false; state.generatedAt = localDateTime(new Date()); showDate(); },
     "[data-export]": el => exportDocument(currentDocument(), el.dataset.export)
   };
 
   const CHANGE = {
+    "[data-import-file]": el => importRecord(el),
     "[data-select-record]": el => {
       const key = el.dataset.selectRecord;
       if (el.checked) state.activeLineId = addRecord(state, findRecord(key));
