@@ -1,6 +1,6 @@
 // FEITURA · estado transitório da cotação.
 // Uma única coleção de linhas, cada uma com ID estável. Remover uma linha
-// nunca desloca o estado das outras. Nada aqui é persistido.
+// nunca desloca o estado das outras. Persistência só por download/upload do registro (.json).
 
 import { referenceMinutes, standardPrice } from "./catalog.js";
 
@@ -17,6 +17,7 @@ export function createState(mode = "producer") {
     lines: new Map(),
     activeLineId: "",
     generatedAt: "",
+    keepDate: false,              // true quando a data vem de um registro importado
     catalog: { query: "", group: "all", limit: 12 }
   };
 }
