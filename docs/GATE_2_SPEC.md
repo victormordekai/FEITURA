@@ -1,4 +1,4 @@
-# FEITURA® | Gate 2 — Especificação arquitetural independente
+# FEITURA | Gate 2 — Especificação arquitetural independente
 
 ## Princípio
 

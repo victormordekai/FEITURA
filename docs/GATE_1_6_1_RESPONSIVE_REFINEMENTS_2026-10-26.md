@@ -1,4 +1,4 @@
-# FEITURA® — V1: GATE 1.6.1 · 2026.10
+# FEITURA — V1: GATE 1.6.1 · 2026.10
 ## Refinamentos de responsividade e hierarquia visual
 
 ### Estado

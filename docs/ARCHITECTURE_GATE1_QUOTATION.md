@@ -1,4 +1,4 @@
-# FEITURA® Gate 1 — Arquitetura da cotação e base técnica
+# FEITURA Gate 1 — Arquitetura da cotação e base técnica
 
 ## Onde está o banco de dados no Gate 1
 

@@ -1,4 +1,4 @@
-# FEITURA® | Gate 1 — Entrega final consolidada
+# FEITURA | Gate 1 — Entrega final consolidada
 
 Data: 24/10/2026
 
@@ -6,7 +6,7 @@ Data: 24/10/2026
 
 Esta versão reúne as intervenções do Gate 1 em uma árvore única:
 
-- identidade tipográfica FEITURA® preservada exclusivamente para o wordmark;
+- identidade tipográfica FEITURA preservada exclusivamente para o wordmark;
 - tipografia estrutural do site preservada;
 - assets de favicon, monograma e compartilhamento social;
 - correções de responsividade e composição do Hero;

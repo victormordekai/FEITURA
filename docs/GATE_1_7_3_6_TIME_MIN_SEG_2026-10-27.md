@@ -1,4 +1,4 @@
-# FEITURA® V1 · GATE 1.7.3.6 · TEMPO MIN:SEG
+# FEITURA V1 · GATE 1.7.3.6 · TEMPO MIN:SEG
 
 ## Base
 GATE 1.7.3.5 · Scalar Inputs.

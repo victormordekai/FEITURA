@@ -1,4 +1,4 @@
-# FEITURA® Gate 1 — correção de cotação e navegação responsiva
+# FEITURA Gate 1 — correção de cotação e navegação responsiva
 
 ## Correções executadas
 

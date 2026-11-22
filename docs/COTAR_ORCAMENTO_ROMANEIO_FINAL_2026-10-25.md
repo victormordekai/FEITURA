@@ -1,4 +1,4 @@
-# FEITURA® | Cotar: Orçamento / Romaneio
+# FEITURA | Cotar: Orçamento / Romaneio
 
 ## Alterações consolidadas
 

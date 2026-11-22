@@ -1,8 +1,8 @@
-# FEITURA® | Gate 1.4.3 — Footer compartilhado
+# FEITURA | Gate 1.4.3 — Footer compartilhado
 
 ## Objetivo
 
-Consolidar o footer institucional como componente compartilhado entre todas as páginas da FEITURA®, evitando duplicação de markup e divergências de conteúdo entre páginas.
+Consolidar o footer institucional como componente compartilhado entre todas as páginas da FEITURA, evitando duplicação de markup e divergências de conteúdo entre páginas.
 
 ## Implementação
 
@@ -15,12 +15,12 @@ Consolidar o footer institucional como componente compartilhado entre todas as p
 
 ## Identidade do footer
 
-O wordmark tipográfico FEITURA® foi ampliado e recebeu tratamento próprio:
+O wordmark tipográfico FEITURA foi ampliado e recebeu tratamento próprio:
 
 ```html
 <h2 class="footer-logo-heading">
   <a class="footer-logo" data-footer-path="index.html" aria-label="FEITURA início">
-    <span class="brand-word-footer">FEITURA<sup>®</sup></span>
+    <span class="brand-word-footer">FEITURA<sup></sup></span>
   </a>
 </h2>
 ```

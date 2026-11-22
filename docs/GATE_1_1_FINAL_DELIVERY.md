@@ -1,4 +1,4 @@
-# FEITURA® | Gate 1.1 — Revisão final / sua FEITURA / rastreabilidade
+# FEITURA | Gate 1.1 — Revisão final / sua FEITURA / rastreabilidade
 
 ## Entregue
 

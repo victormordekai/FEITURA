@@ -142,7 +142,7 @@ export function documentBody(data, { review }) {
   const mode = MODES[data.mode];
   const named = Boolean(data.providerName);
   return `<div class="paper">
-<header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR® | By Victor Mordekai</h3></header>
+<header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR | By Victor Mordekai</h3></header>
 <main>
   <div class="review-title">
     <div><div class="eyebrow">${review ? "05 / revisão final · documento não editável" : "documento exportado"}</div><h2>${esc(mode.document)}</h2></div>
@@ -157,7 +157,7 @@ export function documentBody(data, { review }) {
   <div class="trace"><strong>RASTREABILIDADE:</strong> ${esc(data.trackingId)}<br>GERADO LOCALMENTE · ${esc(data.generatedAt)} · ${esc(data.schema)} · BASE TÉCNICA ${esc(data.dataVersion)}</div>
   ${review ? VALIDATION : ""}
 </main>
-<footer><span><strong>RETEAR® ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA®</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer>
+<footer><span><strong>RETEAR ©</strong> · <a href="https://victormordekai.github.io/FEITURA/">FEITURA</a> · <a href="https://www.linkedin.com/in/victormordekai/">LinkedIn / Victor Mordekai</a></span><span>${esc(data.trackingId)}</span></footer>
 </div>`;
 }
 

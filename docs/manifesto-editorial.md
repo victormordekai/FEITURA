@@ -1,4 +1,4 @@
-# FEITURA® | Direção editorial do Manifesto
+# FEITURA | Direção editorial do Manifesto
 
 O Manifesto responde à pergunta que a página institucional não precisa responder: como a FEITURA entende o fazer e como essa compreensão chega à administração da produção.
 

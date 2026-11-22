@@ -1,4 +1,4 @@
-# FEITURA® | Gate 1 — Relatório técnico
+# FEITURA | Gate 1 — Relatório técnico
 
 ## Escopo executado
 
@@ -55,7 +55,7 @@ Foram preservados:
 - DM Sans, DM Mono e Libre Baskerville para interface;
 - lógica de cálculo existente;
 - navegação e estrutura de páginas;
-- relação FEITURA® / RETEAR®;
+- relação FEITURA / RETEAR;
 - composição da logo fornecida, sem redesenho adicional.
 
 ## Limitações

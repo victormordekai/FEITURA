@@ -1,4 +1,4 @@
-# FEITURA® — V1: GATE 1.6.2 · 2026.10
+# FEITURA — V1: GATE 1.6.2 · 2026.10
 
 ## Escopo
 Reintroduz a abertura automática da seção Orçamento / romaneio ao inserir uma referência direta e mantém o comportamento para referências metodológicas.

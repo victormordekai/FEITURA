@@ -1,4 +1,4 @@
-# FEITURA® Gate 1 — correção da cotação e integração da base técnica
+# FEITURA Gate 1 — correção da cotação e integração da base técnica
 
 ## Diagnóstico
 

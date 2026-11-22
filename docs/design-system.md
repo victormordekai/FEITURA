@@ -13,7 +13,7 @@
 
 ## Tipografia
 
-- Identidade / wordmark: Feitura Display Prototype Regular, exclusiva para o logotipo FEITURA®.
+- Identidade / wordmark: Feitura Display Prototype Regular, exclusiva para o logotipo FEITURA.
 - Display editorial: Libre Baskerville.
 - Interface e corpo: DM Sans, preservada como tipografia principal do HTML.
 - Dados: DM Mono para valores, processos e identificadores.

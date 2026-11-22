@@ -1,4 +1,4 @@
-# FEITURA® | GATE 1.7.3.3
+# FEITURA | GATE 1.7.3.3
 
 ## Escopo
 

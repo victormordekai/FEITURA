@@ -1,6 +1,6 @@
 # FEITURA | Tipografia identitária
 
-`feitura-fonte.otf` contém a fonte **Feitura Display Prototype Regular**, utilizada exclusivamente para a identidade tipográfica do logotipo FEITURA®.
+`feitura-fonte.otf` contém a fonte **Feitura Display Prototype Regular**, utilizada exclusivamente para a identidade tipográfica do logotipo FEITURA.
 
 A fonte não substitui a tipografia de interface do projeto.
 

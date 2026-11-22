@@ -1,4 +1,4 @@
-# FEITURA® — Correção de integração do banco de dados técnico e cotação
+# FEITURA — Correção de integração do banco de dados técnico e cotação
 
 ## Escopo
 

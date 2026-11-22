@@ -1,10 +1,10 @@
-# Contador agregado de visitas FEITURA®
+# Contador agregado de visitas FEITURA
 
 O frontend já contém o módulo `js/modules/counter.js`, mas o endpoint permanece vazio até a implantação do Web App do Google Apps Script.
 
 ## Implantação
 
-1. Crie uma planilha privada exclusiva da FEITURA®.
+1. Crie uma planilha privada exclusiva da FEITURA.
 2. Abra Extensões > Apps Script.
 3. Cole `Code.gs`.
 4. Execute `setup()` uma vez e autorize o projeto.

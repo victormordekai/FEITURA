@@ -1,4 +1,4 @@
-/* FEITURA® · HUD do formulário de lançamento (Subgate 1.1)
+/* FEITURA · HUD do formulário de lançamento (Subgate 1.1)
    Módulo autocontido: injeta o próprio estilo e o HUD flutuante.
    Uso: <script src=".../feitura-form-hud.js" defer></script>
    Opcional: data-form-url="..." na tag <script> para trocar o link do formulário.
@@ -82,7 +82,7 @@
       '<button class="ffh__btn" type="button" aria-haspopup="dialog" aria-controls="ffhPanel" data-campaign-hud>' +
         '<span class="ffh__ring">' + ICON + '</span>' +
         '<span class="ffh__txt">' +
-          '<span class="ffh__eyebrow">FEITURA® · Antes de lançarmos</span>' +
+          '<span class="ffh__eyebrow">FEITURA · Antes de lançarmos</span>' +
           '<span class="ffh__title">Queremos ouvir você. Responda e receba o convite.</span>' +
           '<span class="ffh__meta">3 minutos · encontros 27, 28 e 29/11</span>' +
         '</span>' +
@@ -98,7 +98,7 @@
     panel.setAttribute('aria-label', 'Formulário FEITURA');
     panel.innerHTML =
       '<div class="ffh__card">' +
-        '<div class="ffh__head"><span>FEITURA® · Antes de lançarmos, queremos ouvir você</span>' +
+        '<div class="ffh__head"><span>FEITURA · Antes de lançarmos, queremos ouvir você</span>' +
         '<a href="' + FORM_URL + '" target="_blank" rel="noopener noreferrer">abrir em nova aba ↗</a>' +
         '<button type="button" aria-label="Fechar formulário">×</button></div>' +
       '</div>';
