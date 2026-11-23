@@ -1,4 +1,4 @@
-# FEITURA V1 · GATE 1.8.0
+# FEITURA V1 · GATE 1.9.1 (reconstrução)
 
 Conexão produtiva entre demanda, capacidade e trabalho. Site estático (GitHub Pages), sem backend no Gate 1.
 

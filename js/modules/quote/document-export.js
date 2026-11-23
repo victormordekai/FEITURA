@@ -7,7 +7,7 @@ import { MODES } from "./pricing.js";
 import { documentHtml } from "./document-template.js";
 
 const SCHEMA = "FEITURA-GATE1-DOCUMENTO-1.4";
-export const APP_VERSION = "GATE 1.9.0";
+export const APP_VERSION = "GATE 1.9.1";
 
 /** Chave da revisão em andamento: a página documento.html lê daqui (mesmo navegador, mesmo site). */
 export const REVIEW_KEY = "feitura:revisao";

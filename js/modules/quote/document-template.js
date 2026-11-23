@@ -131,7 +131,7 @@ const VALIDATION = `<div class="validation">
   <label><input id="consent" type="checkbox"><span>Declaro que compreendo que os dados utilizados nesta revisão são tratados como dados públicos ou informações fornecidas para a composição do documento. Concordo com o manuseio necessário à geração, impressão e compartilhamento deste documento, observados os princípios aplicáveis da LGPD.</span></label>
   <div class="actions">
     <button id="print" type="button" disabled>VALIDAR E IMPRIMIR</button>
-    <button id="share" type="button" disabled>COMPARTILHAR PDF AGORA</button>
+    <button id="share" type="button" disabled>VALIDAR E COMPARTILHAR</button>
     <button id="record" class="secondary" type="button">BAIXAR REGISTRO</button>
   </div>
   <p class="status" id="status" role="status" aria-live="polite"></p>
@@ -142,7 +142,7 @@ export function documentBody(data, { review }) {
   const mode = MODES[data.mode];
   const named = Boolean(data.providerName);
   return `<div class="paper">
-<header><h1>FEITURA<sup>®</sup></h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR | By Victor Mordekai</h3></header>
+<header><h1>FEITURA</h1><h2>produção · pessoas · possibilidades</h2><h3>Ecossistema RETEAR | By Victor Mordekai</h3></header>
 <main>
   <div class="review-title">
     <div><div class="eyebrow">${review ? "05 / revisão final · documento não editável" : "documento exportado"}</div><h2>${esc(mode.document)}</h2></div>
