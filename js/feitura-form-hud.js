@@ -84,7 +84,7 @@
         '<span class="ffh__txt">' +
           '<span class="ffh__eyebrow">FEITURA · Antes de lançarmos</span>' +
           '<span class="ffh__title">Queremos ouvir você. Responda e receba o convite.</span>' +
-          '<span class="ffh__meta">3 minutos · encontros 27, 28 e 29/11</span>' +
+          '<span class="ffh__meta">3 minutos · encontros 11, 12 e 13/12</span>' +
         '</span>' +
       '</button>' +
       '<button class="ffh__x" type="button" aria-label="Ocultar convite do formulário">×</button>';
